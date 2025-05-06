@@ -56,11 +56,12 @@ class BasicWood(ABC):
     self.current_tied = False
     self.guide_target = -1#Vector3(0,0,0)
     self.tie_axis = tie_axis
-    self.tie_updated = True
+    self.tie_updated = False
     #Information Variables
     self.__length = 0    
     self.age = 0    
     self.cut = False
+    self.prunable = True
     self.order = order
     self.num_branches = 0
     self.branch_dict = collections.deque()

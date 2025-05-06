@@ -65,8 +65,14 @@ end_header'''.format(len(vertices), len(faces))
     f.close()
 
 
-def convert_ply_to_obj(in_path, out_path):
+def convert_ply_to_ext(in_path, out_path):
     import pymeshlab
     ms = pymeshlab.MeshSet()
     ms.load_new_mesh(in_path)
     ms.save_current_mesh(out_path)
+
+# def convert_ply_to_x3d(in_path, out_path):
+#     import pymeshlab
+#     ms = pymeshlab.MeshSet()
+#     ms.load_new_mesh(in_path)
+#     ms.save_current_mesh(out_path)

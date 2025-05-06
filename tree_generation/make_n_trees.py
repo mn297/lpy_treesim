@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 import random as rd
 from openalea.lpy import Lsystem
-from lpy_treesim.dataset_generation.helpers import write
+from lpy_treesim.tree_generation.helpers import write
 import argparse
 
 if __name__ == "__main__":
