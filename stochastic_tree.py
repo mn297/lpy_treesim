@@ -47,32 +47,21 @@ class BasicWood(ABC):
     if copy_from:
       self.__copy_constructor__(copy_from)
       return
-    self.start = Vector3(0,0,0)
-    self.end = Vector3(0,0,0)
+    self.location = LocationState()
     #Tying variables    
-    self.last_tie_location = Vector3(0,0,0)
-    self.has_tied = False
-    self.guide_points = []
+    self.tying = TyingState(tie_axis=tie_axis)
     self.current_tied = False
-    self.guide_target = -1#Vector3(0,0,0)
-    self.tie_axis = tie_axis
-    self.tie_updated = False
     #Information Variables
-    self.__length = 0    
-    self.age = 0    
-    self.cut = False
-    self.prunable = True
-    self.order = order
-    self.num_branches = 0
-    self.branch_dict = collections.deque()
-    self.color = color
-    self.material = material
+    self.info = InfoState(order=order, color=color, material=material)
+    self.__length = 0
     #Growth Variables
-    self.max_buds_segment = max_buds_segment
-    self.thickness = thickness
-    self.thickness_increment = thickness_increment
-    self.growth_length = growth_length
-    self.max_length = max_length
+    self.growth = GrowthState(
+        max_buds_segment=max_buds_segment,
+        thickness=thickness,
+        thickness_increment=thickness_increment,
+        growth_length=growth_length,
+        max_length=max_length
+    )
     
     
     
@@ -81,6 +70,220 @@ class BasicWood(ABC):
     for k,v in update_dict.items():
       setattr(self, k, v)
     #self.__dict__.update(update_dict)
+  
+  # ===== Location property accessors for backward compatibility =====
+  @property
+  def start(self):
+    """Get the start location."""
+    return self.location.start
+  
+  @start.setter
+  def start(self, value):
+    """Set the start location."""
+    self.location.start = value
+  
+  @property
+  def end(self):
+    """Get the end location."""
+    return self.location.end
+  
+  @end.setter
+  def end(self, value):
+    """Set the end location."""
+    self.location.end = value
+  
+  @property
+  def last_tie_location(self):
+    """Get the last tie location."""
+    return self.location.last_tie_location
+  
+  @last_tie_location.setter
+  def last_tie_location(self, value):
+    """Set the last tie location."""
+    self.location.last_tie_location = value
+  
+  # ===== Tying property accessors for backward compatibility =====
+  @property
+  def has_tied(self):
+    """Get whether this wood object has been tied."""
+    return self.tying.has_tied
+  
+  @has_tied.setter
+  def has_tied(self, value):
+    """Set whether this wood object has been tied."""
+    self.tying.has_tied = value
+  
+  @property
+  def guide_points(self):
+    """Get the guide control points list."""
+    return self.tying.guide_points
+  
+  @guide_points.setter
+  def guide_points(self, value):
+    """Set the guide control points list."""
+    self.tying.guide_points = value
+  
+  @property
+  def guide_target(self):
+    """Get the guide target (Wire object or -1)."""
+    return self.tying.guide_target
+  
+  @guide_target.setter
+  def guide_target(self, value):
+    """Set the guide target."""
+    self.tying.guide_target = value
+  
+  @property
+  def tie_axis(self):
+    """Get the tie axis direction vector."""
+    return self.tying.tie_axis
+  
+  @tie_axis.setter
+  def tie_axis(self, value):
+    """Set the tie axis direction vector."""
+    self.tying.tie_axis = value
+  
+  @property
+  def tie_updated(self):
+    """Get whether the tie has been updated."""
+    return self.tying.tie_updated
+  
+  @tie_updated.setter
+  def tie_updated(self, value):
+    """Set whether the tie has been updated."""
+    self.tying.tie_updated = value
+  
+  # ===== Growth property accessors for backward compatibility =====
+  @property
+  def max_buds_segment(self):
+    """Get the maximum buds per segment."""
+    return self.growth.max_buds_segment
+  
+  @max_buds_segment.setter
+  def max_buds_segment(self, value):
+    """Set the maximum buds per segment."""
+    self.growth.max_buds_segment = value
+  
+  @property
+  def thickness(self):
+    """Get the current thickness."""
+    return self.growth.thickness
+  
+  @thickness.setter
+  def thickness(self, value):
+    """Set the current thickness."""
+    self.growth.thickness = value
+  
+  @property
+  def thickness_increment(self):
+    """Get the thickness increment per step."""
+    return self.growth.thickness_increment
+  
+  @thickness_increment.setter
+  def thickness_increment(self, value):
+    """Set the thickness increment per step."""
+    self.growth.thickness_increment = value
+  
+  @property
+  def growth_length(self):
+    """Get the growth length per step."""
+    return self.growth.growth_length
+  
+  @growth_length.setter
+  def growth_length(self, value):
+    """Set the growth length per step."""
+    self.growth.growth_length = value
+  
+  @property
+  def max_length(self):
+    """Get the maximum total length."""
+    return self.growth.max_length
+  
+  @max_length.setter
+  def max_length(self, value):
+    """Set the maximum total length."""
+    self.growth.max_length = value
+  
+  # ===== Info property accessors for backward compatibility =====
+  @property
+  def age(self):
+    """Get the age of this wood object."""
+    return self.info.age
+  
+  @age.setter
+  def age(self, value):
+    """Set the age of this wood object."""
+    self.info.age = value
+  
+  @property
+  def cut(self):
+    """Get whether this wood object has been cut."""
+    return self.info.cut
+  
+  @cut.setter
+  def cut(self, value):
+    """Set whether this wood object has been cut."""
+    self.info.cut = value
+  
+  @property
+  def prunable(self):
+    """Get whether this wood object is prunable."""
+    return self.info.prunable
+  
+  @prunable.setter
+  def prunable(self, value):
+    """Set whether this wood object is prunable."""
+    self.info.prunable = value
+  
+  @property
+  def order(self):
+    """Get the hierarchical order of this wood object."""
+    return self.info.order
+  
+  @order.setter
+  def order(self, value):
+    """Set the hierarchical order of this wood object."""
+    self.info.order = value
+  
+  @property
+  def num_branches(self):
+    """Get the number of branches from this wood object."""
+    return self.info.num_branches
+  
+  @num_branches.setter
+  def num_branches(self, value):
+    """Set the number of branches from this wood object."""
+    self.info.num_branches = value
+  
+  @property
+  def branch_dict(self):
+    """Get the branch dictionary/deque."""
+    return self.info.branch_dict
+  
+  @branch_dict.setter
+  def branch_dict(self, value):
+    """Set the branch dictionary/deque."""
+    self.info.branch_dict = value
+  
+  @property
+  def color(self):
+    """Get the color code for this wood object."""
+    return self.info.color
+  
+  @color.setter
+  def color(self, value):
+    """Set the color code for this wood object."""
+    self.info.color = value
+  
+  @property
+  def material(self):
+    """Get the material code for this wood object."""
+    return self.info.material
+  
+  @material.setter
+  def material(self, value):
+    """Set the material code for this wood object."""
+    self.info.material = value
     
   @abstractmethod
   def is_bud_break(self) -> bool:
@@ -111,7 +314,7 @@ class BasicWood(ABC):
     self.grow()
   
   @abstractmethod
-  def create_branch(self) -> "BasicWood Object":
+  def create_branch(self):
     """Returns how a new order branch when bud break happens will look like if a bud break happens"""
     pass
     #new_object = BasicWood.clone(self.branch_object)
@@ -120,36 +323,33 @@ class BasicWood(ABC):
               # self.max_length/2, self.tie_axis, self.bud_break_max_length/2, self.order+1, self.bud_break_prob_func)
     
   def update_guide(self, guide_target):
-    curve = []
+    """Compute and append guide control points for this wood object.
+    
+    Args:
+        guide_target: Wire object (with .point attribute) or None/-1 (no-op).
+    
+    Notes:
+        - If infeasible (tie point cannot be reached), silently returns.
+        - Appends control points incrementally to self.guide_points.
+        - Uses self.start as base if not yet tied; self.last_tie_location otherwise.
+    """
     self.guide_target = guide_target
-    if self.guide_target == -1:
+    if guide_target is None or guide_target == -1:
       return
-    if self.has_tied == False:
-      curve, i_target = self.get_control_points(self.guide_target.point, self.start , self.end, self.tie_axis)
-    else:
-      curve, i_target= self.get_control_points(self.guide_target.point, self.last_tie_location , self.end, self.tie_axis)
-    if i_target is not None:
+    
+    # Select base point: use last tie location if already tied, otherwise start
+    base_point = self.last_tie_location if self.has_tied else self.start
+    
+    # Compute control points and tie point in one call
+    curve, tie_point = self.get_control_points(
+        guide_target.point, base_point, self.end, self.tie_axis
+    )
+    
+    # Append only if feasible (tie_point is not None)
+    if tie_point is not None and curve:
       self.guide_points.extend(curve)
-      #self.last_tie_location = copy.deepcopy(Vector3(i_target)) #Replaced by updating location at StartEach
+      # Note: last_tie_location updated at StartEach hook, not here
   
-  # def tie_lstring(self, lstring, index):
-  #   #Lstring is the entire lstring
-  #   #Index is where wood begins
-  #   spline = CSpline(self.guide_points) 
-  #   if str(spline.curve()) == "nan":
-  #     raise ValueError("CURVE IS NAN", self.guide_points)
-  #   remove_count = 0
-  #   if not self.has_tied:
-  #     if lstring[index+1].name in ['&','/','SetGuide']:
-  #       del(lstring[index+1])
-  #       remove_count+=1
-  #     self.has_tied = True
-  #   if lstring[index+1].name in ['&','/','SetGuide']:
-  #     del(lstring[index+1])
-  #     remove_count+=1
-  #   lstring.insertAt(index+1, 'SetGuide({}, {})'.format(spline.curve(stride_factor = 100), self.length))
-  #   return lstring,remove_count
-
   def tie_lstring(self, lstring, index):
     """Insert a SetGuide(...) after position `index` in `lstring`.
 
@@ -175,7 +375,7 @@ class BasicWood(ABC):
     removal_names = {"&", "/", "SetGuide"}
     insert_pos = index + 1
     removed_count = 0
-    
+
     # Remove while the next token exists and matches
     while insert_pos < len(lstring) and getattr(lstring[insert_pos], "name", None) in removal_names:
         del lstring[insert_pos]
@@ -261,7 +461,9 @@ class BasicWood(ABC):
     # Compute tie point on wire
     # Start from perpendicular projection of start onto wire, then move parallel_travel along wire
     start_projection_on_wire = start_arr + perpendicular_component
-    tie_point = start_projection_on_wire + parallel_travel * wire_axis_unit
+    direction_to_wire = np.sign(np.dot(wire_point, wire_axis_unit))
+    tie_point = start_projection_on_wire + parallel_travel * wire_axis_unit * direction_to_wire
+    
     
     # Generate control points along deflected curve using beam deflection formula
     control_points = self._generate_deflected_curve(start_arr, current_arr, tie_point)
@@ -294,26 +496,65 @@ class BasicWood(ABC):
     perpendicular_component = vec_a - parallel_component
     return parallel_component, perpendicular_component
   
-  
-      
-# class Branch(BasicWood):
-#   def __init__(self, num_buds_segment: int = 5, bud_break_prob: float = 0.8, thickness: float = 0.1,\
-#                thickness_increment: float = 0.01, growth_length: float = 1., max_length: float = 7.,\
-#                tie_axis: tuple = (0,1,1), bud_break_max_length: int = 5, order: int = 0, bud_break_prob_func: "Function" = lambda x,y: rd.random()):
-#     super().__init__(num_buds_segment, bud_break_prob, thickness, thickness_increment, growth_length,\
-#                max_length, tie_axis, bud_break_max_length, order, bud_break_prob_func)
-    
-    
-# class Trunk(BasicWood):
-#   """ Details of the trunk while growing a tree, length, thickness, where to attach them etc """
-#   def __init__(self, num_buds_segment: int = 5, bud_break_prob: float = 0.8, thickness: float = 0.1,\
-#                thickness_increment: float = 0.01, growth_length: float = 1., max_length: float = 7.,\
-#                tie_axis: tuple = (0,1,1), bud_break_max_length: int = 5, order: int = 0, bud_break_prob_func: "Function" = lambda x,y: rd.random()):
-#      super().__init__(num_buds_segment, bud_break_prob, thickness, thickness_increment, growth_length,\
-#                max_length, tie_axis, bud_break_max_length, order, bud_break_prob_func)
 
 from dataclasses import dataclass
 from typing import Tuple
+
+@dataclass
+class LocationState:
+    """Location tracking for a wood object: start point, end point, and last tie location."""
+    start: any = None  # Vector3
+    end: any = None    # Vector3
+    last_tie_location: any = None  # Vector3
+    
+    def __post_init__(self):
+        """Initialize Vector3 points if not provided."""
+        if self.start is None:
+            self.start = Vector3(0, 0, 0)
+        if self.end is None:
+            self.end = Vector3(0, 0, 0)
+        if self.last_tie_location is None:
+            self.last_tie_location = Vector3(0, 0, 0)
+
+@dataclass
+class TyingState:
+    """Tying and guiding state for a wood object."""
+    has_tied: bool = False
+    guide_points: list = None  # List of (x,y,z) tuples for spline control points
+    guide_target: any = -1  # Wire object or -1 (no target)
+    tie_axis: tuple = (0, 1, 1)  # Direction vector for the wire axis
+    tie_updated: bool = False
+    
+    def __post_init__(self):
+        """Initialize guide_points as empty list if not provided."""
+        if self.guide_points is None:
+            self.guide_points = []
+
+@dataclass
+class GrowthState:
+    """Growth parameters for a wood object."""
+    max_buds_segment: int = 5
+    thickness: float = 0.1
+    thickness_increment: float = 0.01
+    growth_length: float = 1.0
+    max_length: float = 7.0
+
+@dataclass
+class InfoState:
+    """Information/metadata for a wood object."""
+    age: int = 0
+    cut: bool = False
+    prunable: bool = True
+    order: int = 0
+    num_branches: int = 0
+    color: int = 0
+    material: int = 0
+    branch_dict: any = None  # collections.deque
+    
+    def __post_init__(self):
+        """Initialize branch_dict if not provided."""
+        if self.branch_dict is None:
+            self.branch_dict = collections.deque()
 
 @dataclass
 class Wire:

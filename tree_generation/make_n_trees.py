@@ -11,7 +11,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--num_trees', type=int, default=1)
     parser.add_argument('--output_dir', type=str, default='dataset/')
-    parser.add_argument('--lpy_file', type=str, default='examples/UFO_tie_prune_label.lpy')
+    parser.add_argument('--lpy_file', type=str, default='examples/Envy_tie_prune_label.lpy')
     parser.add_argument('--verbose', action='store_true', default=False)
     args = parser.parse_args()
     num_trees = args.num_trees
