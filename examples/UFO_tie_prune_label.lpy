@@ -8,7 +8,7 @@ import numpy as np
 import random as rd
 import copy
 import gc
-import times
+import time
 from helper import *
 
 # Used to set the contour back to a circle after it has been changed for a branch
@@ -160,11 +160,11 @@ class Trunk(BasicWood):
 #Pass transition probabs? --> solve with abstract classes
 growth_length = 0.1
 basicwood_prototypes = {}
-basicwood_prototypes['spur'] = Spur(tie_axis = (0,1,1), max_length = 0.1, thickness = 0.003, growth_length = growth_length/2, thickness_increment = 0., prototype_dict = basicwood_prototypes, color = [0, 255, 0])
-basicwood_prototypes['side_branch'] = LittleBranch(tie_axis = (1,1,0), max_length = 0.25, thickness = 0.003, growth_length =growth_length/2, thickness_increment = 0.00001, prototype_dict = basicwood_prototypes, color = [0, 255, 0])
+basicwood_prototypes['spur'] = Spur(tie_axis = (1, 0, 0), max_length = 0.1, thickness = 0.003, growth_length = growth_length/2, thickness_increment = 0., prototype_dict = basicwood_prototypes, color = [0, 255, 0])
+basicwood_prototypes['side_branch'] = LittleBranch(tie_axis = (0, 0, 1), max_length = 0.25, thickness = 0.003, growth_length =growth_length/2, thickness_increment = 0.00001, prototype_dict = basicwood_prototypes, color = [0, 255, 0])
 
-basicwood_prototypes['trunk'] = Trunk(tie_axis = (0,1,1), max_length = 3, thickness = 0.02, thickness_increment = 0.00001, growth_length = growth_length, prototype_dict = basicwood_prototypes, color = [255, 0, 0])
-basicwood_prototypes['branch'] = Branch(tie_axis = (1,1,0), max_length = 2.5, thickness = 0.01, thickness_increment = 0.00001, growth_length = growth_length, prototype_dict = basicwood_prototypes, color = [255, 150, 0])
+basicwood_prototypes['trunk'] = Trunk(tie_axis = (1, 0, 0), max_length = 3, thickness = 0.02, thickness_increment = 0.00001, growth_length = growth_length, prototype_dict = basicwood_prototypes, color = [255, 0, 0])
+basicwood_prototypes['branch'] = Branch(tie_axis = (0, 0, 1), max_length = 2.5, thickness = 0.01, thickness_increment = 0.00001, growth_length = growth_length, prototype_dict = basicwood_prototypes, color = [255, 150, 0])
 
 #init  
 trunk_base = Trunk(copy_from = basicwood_prototypes['trunk'])
@@ -184,7 +184,7 @@ def generate_points_ufo():
 
   
 
-support = Support(generate_points_ufo(), 7 , 1 , (0.6,0,0.4), (0,1,1), (0,1,1))
+support = Support(generate_points_ufo(), 7 , 1 , (0.6,0,0.4))
 num_iteration_tie = 8
 num_iteration_prune = 16
 bud_spacing_age = 2
@@ -285,7 +285,7 @@ module bud
 module branch
 module C
 curve = create_bezier_curve(x_range = (-1, 1), y_range = (-1, 1), z_range = (0, 10), seed_val=time.time())
-Axiom: Attractors(support)SetGuide(curve, trunk_base.max_length)[GetPos(trunk_base.start)T(ParameterSet(type = trunk_base))&(270)/(0)grow_object(trunk_base)GetPos(trunk_base.end)]
+Axiom: Attractors(support)SetGuide(curve, trunk_base.max_length)[@GcGetPos(trunk_base.start)T(ParameterSet(type = trunk_base))&(270)/(0)grow_object(trunk_base)GetPos(trunk_base.end)]
 derivation length: 160
 
 production:
@@ -324,14 +324,14 @@ bud(t) :
    if 'LittleBranch' in new_object.name:
      import time
      curve = create_bezier_curve(x_range=(-.5, .5), y_range=(-.5, .5), z_range=(-1, 1), seed_val=time.time())
-     nproduce[SetGuide(curve, new_object.max_length)
+     nproduce[@GcSetGuide(curve, new_object.max_length)
    elif 'Spur' in new_object.name:
      import time
      curve = create_bezier_curve(x_range=(-.2, .2), y_range=(-.2, .2), z_range=(-1, 1), seed_val=time.time())
-     nproduce[SetGuide(curve, new_object.max_length)
+     nproduce[@GcSetGuide(curve, new_object.max_length)
    else:
      nproduce [
-   nproduce @RGetPos(new_object.start)C(ParameterSet(type = new_object))/(rd.random()*360)&(rd.random()*360)grow_object(new_object)GetPos(new_object.end)]bud(t)
+   nproduce @RGetPos(new_object.start)C(ParameterSet(type = new_object))/(rd.random()*360)&(rd.random()*360)grow_object(new_object)GetPos(new_object.end)@Ge]bud(t)
  
    
 I(s,r,o) --> I(s,r+o.thickness_increment, o)
