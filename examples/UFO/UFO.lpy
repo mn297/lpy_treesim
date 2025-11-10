@@ -8,176 +8,249 @@ import time
 from helper import *
 import numpy as np
 import random as rd
-from examples.UFO.UFOconfigs import basicwood_prototypes, Trunk, Branch, TertiaryBranch, Spur, UFOSimulationConfig
+from examples.UFO.UFOconfigs import basicwood_prototypes, Trunk, Branch, TertiaryBranch, Spur, UFOSimulationConfig, generate_points_ufo
 from dataclasses import dataclass
 
 
 #init  
-trunk_base = Trunk(copy_from = basicwood_prototypes['trunk'])
-time_count = 0
+main_trunk = Trunk(copy_from = basicwood_prototypes['trunk'])
 
 # Create simulation configuration
 simulation_config = UFOSimulationConfig()
 
-def generate_points_ufo():
-    """
-    Generate 3D points for the UFO trellis wire structure.
-    
-    Creates a linear array of wire attachment points along the x-axis at a fixed
-    height (z) and depth (y). The points are spaced evenly within the configured
-    x-range and used to construct the trellis support structure.
-    
-    Returns:
-        list: List of (x, y, z) tuples representing wire attachment points,
-              where all points share the same y and z coordinates.
-              
-    Configuration parameters used:
-        - ufo_x_range: Tuple (min_x, max_x) defining the range of x coordinates
-        - ufo_x_spacing: Spacing between consecutive x coordinates
-        - ufo_z_value: Fixed z-coordinate (height) for all points
-        - ufo_y_value: Fixed y-coordinate (depth) for all points
-    """
-    x = np.arange(
-        simulation_config.ufo_x_range[0],
-        simulation_config.ufo_x_range[1], 
-        simulation_config.ufo_x_spacing
-    ).astype(float)
-    z = np.full((x.shape[0],), simulation_config.ufo_z_value).astype(float)
-    y = np.full((x.shape[0],), simulation_config.ufo_y_value).astype(float)
-    
-    pts = []
-    for i in range(x.shape[0]):
-        pts.append((x[i], y[i], z[i]))
-    
-    return pts
 
-  
 
-support = Support(generate_points_ufo(), simulation_config.support_num_wires, simulation_config.support_spacing_wires, simulation_config.support_trunk_wire_point)
-num_iteration_tie = simulation_config.num_iteration_tie
-num_iteration_prune = simulation_config.num_iteration_prune
-trunk_base.tying.guide_target = support.trunk_wire
-###Tying stuff begins
+trellis_support = Support(generate_points_ufo(), simulation_config.support_num_wires, simulation_config.support_spacing_wires, simulation_config.support_trunk_wire_point)
+tying_interval_iterations = simulation_config.num_iteration_tie
+pruning_interval_iterations = simulation_config.num_iteration_prune
+main_trunk.tying.guide_target = trellis_support.trunk_wire
  
-
-def tie(lstring):
-  for j,i in enumerate(lstring):
-    if (i == 'WoodStart' and hasattr(i[0].type, 'tying')) and getattr(i[0].type.tying, 'tie_axis', None) is not None:
-      if i[0].type.tying.tie_updated == False:
-        continue
-      curr = i[0]
-      if i[0].type.tying.guide_points:
-        i[0].type.tying.tie_updated = False
-        i[0].type.tying.guide_target.add_branch()
-        lstring, count = i[0].type.tie_lstring(lstring, j)
-       
-        return True
-  return False
-        
-
 def StartEach(lstring):
-  global parent_child_dict, support, trunk_base
-  if support.trunk_wire and trunk_base.tying.tie_updated == False:
-    trunk_base.tie_update()
+    """
+    Initialize tying updates for trunk and branches at the start of each iteration.
+    
+    This function is called at the beginning of each L-System derivation iteration
+    to prepare the tree structure for potential tying operations. It ensures that
+    both the trunk and all child branches are ready to participate in the tying
+    process by updating their tying status.
+    
+    The function performs two main tasks:
+    1. Updates the trunk's tying status if it has a wire target and hasn't been updated
+    2. Updates all child branches' tying status if they haven't been updated
+    
+    Args:
+        lstring: The current L-System string (not used in this function but required
+                by L-Py's callback interface)
+        
+    Returns:
+        None: Modifies global tree structures in-place
+        
+    Note:
+        This function relies on global variables: branch_hierarchy, trellis_support, main_trunk.
+        It should be called automatically by L-Py at the start of each iteration.
+    """
+    global branch_hierarchy, trellis_support, main_trunk
+    
+    # Update trunk tying status if it has a wire target and needs updating
+    if trellis_support.trunk_wire and not main_trunk.tying.tie_updated:
+        main_trunk.tie_update()
 
-  for i in parent_child_dict[trunk_base.name]:
-	  if i.tying.tie_updated == False:
-	    i.tie_update()
+    # Update tying status for all child branches that need it
+    for branch in branch_hierarchy[main_trunk.name]:
+        if not branch.tying.tie_updated:
+            branch.tie_update()
     
   
 def EndEach(lstring):
-  global parent_child_dict, support, num_iteration_tie
-  
-  tied = False  
-  if (getIterationNb()+1)%num_iteration_tie == 0:
-    
-    if support.trunk_wire :
-      trunk_base.update_guide(trunk_base.tying.guide_target) #Tie trunk one iteration before branches
-    energy_matrix = get_energy_mat(parent_child_dict[trunk_base.name], support, simulation_config)
-    decide_guide(energy_matrix, parent_child_dict[trunk_base.name], support, simulation_config)
-    for branch in parent_child_dict[trunk_base.name]:
-      branch.update_guide(branch.tying.guide_target)
-    while tie(lstring):
-      pass
-    if (getIterationNb() + 1) % num_iteration_prune == 0:
-     	 while pruning_strategy(lstring):  # Prune branches until no more can be pruned
-            pass
-  return lstring
+    """
+    Perform tying and pruning operations at the end of each L-System iteration.
 
-def pruning_strategy(lstring): #Remove remnants of cut
-  cut = False
-  for j,i in enumerate(lstring):
-    if i.name == 'WoodStart' and i[0].type.info.age > simulation_config.pruning_age_threshold and i[0].type.tying.has_tied == False and i[0].type.info.cut == False:
-      i[0].type.info.cut = True      
-      lstring = cut_from(j, lstring)
-      return True
-  return False
-  
-parent_child_dict = {}
-parent_child_dict[trunk_base.name] = []	
-label = simulation_config.label
-#Tie trunk
-module Attractors
-module grow_object
-module bud
-module branch
-module WoodStart
-curve = create_bezier_curve(x_range = (-1, 1), y_range = (-1, 1), z_range = (0, 10), seed_val=time.time())
-Axiom: Attractors(support)SetGuide(curve, trunk_base.growth.max_length)[@GcGetPos(trunk_base.location.start)WoodStart(ParameterSet(type = trunk_base))&(270)/(0)grow_object(trunk_base)GetPos(trunk_base.location.end)]
+    This function is the main orchestration point for the tree training simulation.
+    It executes tying operations (assigning branches to trellis wires) and pruning
+    operations based on configurable iteration intervals. The tying process uses
+    energy-based optimization to find optimal branch-to-wire assignments.
+
+    The function performs the following sequence when tying is scheduled:
+    1. Updates the trunk's guide target (ties trunk first)
+    2. Calculates energy matrix for all branch-wire combinations
+    3. Uses greedy optimization to assign branches to lowest-energy wires
+    4. Updates guide targets for all assigned branches
+    5. Performs actual tying operations in the L-System string
+    6. Prunes old branches if pruning iteration is reached
+
+    Args:
+        lstring: The current L-System string containing modules and their parameters
+
+    Returns:
+        The modified L-System string after tying and pruning operations
+
+    Note:
+        This function relies on global variables and is called automatically by L-Py
+        at the end of each derivation iteration. Tying occurs every tying_interval_iterations
+        iterations, while pruning occurs every pruning_interval_iterations iterations.
+    """
+    global branch_hierarchy, trellis_support, tying_interval_iterations
+
+    current_iteration = getIterationNb() + 1 #GetIterationNb is an L-Py function
+
+    # Check if this is a tying iteration
+    if current_iteration % tying_interval_iterations == 0:
+        # Tie trunk to its target wire first (one iteration before branches)
+        if trellis_support.trunk_wire:
+            main_trunk.update_guide(main_trunk.tying.guide_target)
+
+        # Calculate energy costs for optimal branch-to-wire assignments
+        branches = branch_hierarchy[main_trunk.name]
+        energy_matrix = get_energy_mat(branches, trellis_support, simulation_config)
+
+        # Perform greedy optimization to assign branches to wires
+        decide_guide(energy_matrix, branches, trellis_support, simulation_config)
+
+        # Update guide targets for all assigned branches
+        for branch in branches:
+            branch.update_guide(branch.tying.guide_target)
+
+        # Execute tying operations in the L-System string
+        while tie(lstring, simulation_config):
+            pass  # Continue until no more tying operations are possible
+
+        # Check if this is also a pruning iteration
+        if current_iteration % pruning_interval_iterations == 0:
+            # Prune branches until no more can be pruned
+            while prune(lstring, simulation_config):
+                pass
+
+    return lstring
+
+
+
+branch_hierarchy = {}
+branch_hierarchy[main_trunk.name] = []	
+enable_color_labeling = simulation_config.label
+# =============================================================================
+# L-SYSTEM GRAMMAR DEFINITION
+# =============================================================================
+# This section defines the formal grammar for the UFO tree growth simulation.
+# The L-System uses modules (symbols) to represent different plant components
+# and their growth behaviors.
+
+# -----------------------------------------------------------------------------
+# MODULE DECLARATIONS
+# -----------------------------------------------------------------------------
+# Define the vocabulary of symbols used in the L-System grammar.
+# Each module represents a different type of plant component or operation.
+
+module Attractors     # Trellis support structure that guides branch growth
+module grow_object    # Growing plant parts (trunk, branches, spurs) with length/thickness
+module bud           # Dormant buds that can break to produce new branches
+module branch        # Branch segments in the L-System string
+module WoodStart     # Starting point of wood segments (used for tying operations)
+
+# -----------------------------------------------------------------------------
+# GLOBAL L-SYSTEM PARAMETERS
+# -----------------------------------------------------------------------------
+# Create a growth guide curve for the initial trunk development
+trunk_guide_curve = create_bezier_curve(x_range = (-1, 1), y_range = (-1, 1), z_range = (0, 10), seed_val=time.time())
+
+# -----------------------------------------------------------------------------
+# AXIOM (STARTING STRING)
+# -----------------------------------------------------------------------------
+# The initial L-System string that begins the simulation.
+# Starts with the trellis attractors, sets up the trunk guide curve,
+# and initializes the trunk growth with proper orientation.
+Axiom: Attractors(trellis_support)SetGuide(trunk_guide_curve, main_trunk.growth.max_length)[@GcGetPos(main_trunk.location.start)WoodStart(ParameterSet(type = main_trunk))&(270)/(0)grow_object(main_trunk)GetPos(main_trunk.location.end)]
+
+# -----------------------------------------------------------------------------
+# DERIVATION PARAMETERS
+# -----------------------------------------------------------------------------
+# Set the maximum number of derivation steps for the L-System
 derivation length: simulation_config.derivation_length
 
+# -----------------------------------------------------------------------------
+# PRODUCTION RULES
+# -----------------------------------------------------------------------------
+# Define how each module type evolves during each derivation step.
+# These rules control the growth, branching, and development of the tree.
+
 production:
-#Decide whether branch internode vs trunk internode need to be the same size.
-grow_object(o) :
-  if o == None:
+
+# GROW_OBJECT PRODUCTION RULE
+# Handles the growth of plant segments (trunk, branches, spurs)
+# Determines whether to continue growing, stop, or produce buds
+grow_object(plant_segment) :
+  if plant_segment == None:
+    # Null object - terminate this branch
     produce *
-  if o.length >= o.growth.max_length:
+  if plant_segment.length >= plant_segment.growth.max_length:
+    # Maximum length reached - stop growing this segment
     nproduce *
   else:
-    nproduce SetContour(o.contour)
-    o.grow_one()
-    if label:
-      r, g, b = o.info.color
+    # Continue growing - update segment properties
+    nproduce SetContour(plant_segment.contour)
+    plant_segment.grow_one()
+    if enable_color_labeling:
+      # Add color visualization if labeling is enabled
+      r, g, b = plant_segment.info.color
       nproduce SetColor(r,g,b)
-    if 'Spur' in o.name:
-      produce I(o.growth.growth_length, o.growth.thickness, o)bud(ParameterSet(type = o, num_buds = 0))@O(o.growth.thickness*simulation_config.thickness_multiplier)grow_object(o)
+    if 'Spur' in plant_segment.name:
+      # Spur branches: produce short shoots with terminal buds
+      produce I(plant_segment.growth.growth_length, plant_segment.growth.thickness, plant_segment)bud(ParameterSet(type = plant_segment, num_buds = 0))@O(plant_segment.growth.thickness*simulation_config.thickness_multiplier)grow_object(plant_segment)
     else:
-      nproduce I(o.growth.growth_length, o.growth.thickness, o)
-      if np.isclose(o.info.age % o.bud_spacing_age, 0, atol=simulation_config.bud_age_tolerance):
-          nproduce bud(ParameterSet(type = o, num_buds = 0))
-      produce grow_object(o)
-    #produce I(o.growth_length, o.thickness, o)bud(ParameterSet(type = o, num_buds = 0))grow_object(o)
+      # Regular branches: produce internode segment
+      nproduce I(plant_segment.growth.growth_length, plant_segment.growth.thickness, plant_segment)
+      if np.isclose(plant_segment.info.age % plant_segment.bud_spacing_age, 0, atol=simulation_config.bud_age_tolerance):
+          # Age-based bud production for lateral branching
+          nproduce bud(ParameterSet(type = plant_segment, num_buds = 0))
+      produce grow_object(plant_segment)
 
-bud(t) :
- if t.type.is_bud_break(t.num_buds):
-   new_object = t.type.create_branch()
-   if new_object == None:
+# BUD PRODUCTION RULE
+# Controls bud break and branch initiation
+# Determines when buds activate to produce new branches
+bud(bud_parameters) :
+ if bud_parameters.type.is_bud_break(bud_parameters.num_buds):
+   # Bud break condition met - create new branch
+   new_branch = bud_parameters.type.create_branch()
+   if new_branch == None:
+     # Branch creation failed - terminate
      produce *
-   parent_child_dict[new_object.name] = []	
-   parent_child_dict[t.type.name].append(new_object)
-   #Store new object somewhere
-   t.num_buds+=1
-   t.type.info.num_branches+=1
+   # Register new branch in parent-child relationship tracking
+   branch_hierarchy[new_branch.name] = []
+   branch_hierarchy[bud_parameters.type.name].append(new_branch)
+   # Update branch counters
+   bud_parameters.num_buds+=1
+   bud_parameters.type.info.num_branches+=1
 
-   if hasattr(new_object, 'curve_x_range'):
+   if hasattr(new_branch, 'curve_x_range'):
+     # Curved branches: set up custom growth guide curve
      import time
-     curve = create_bezier_curve(x_range=new_object.curve_x_range, y_range=new_object.curve_y_range, z_range=new_object.curve_z_range, seed_val=time.time())
-     nproduce[@GcSetGuide(curve, new_object.growth.max_length)
+     curve = create_bezier_curve(x_range=new_branch.curve_x_range, y_range=new_branch.curve_y_range, z_range=new_branch.curve_z_range, seed_val=time.time())
+     nproduce[@GcSetGuide(curve, new_branch.growth.max_length)
    else:
+     # Straight branches: use default orientation
      nproduce [
-   nproduce @RGetPos(new_object.location.start)WoodStart(ParameterSet(type = new_object))/(rd.random()*360)&(rd.random()*360)grow_object(new_object)GetPos(new_object.location.end)@Ge]bud(t)
- 
-   
-I(s,r,o) --> I(s,r+o.growth.thickness_increment, o)
-_(r) --> _(r+o.growth.thickness_increment)
+   # Produce new branch with random orientation and growth object
+   nproduce @RGetPos(new_branch.location.start)WoodStart(ParameterSet(type = new_branch))/(rd.random()*360)&(rd.random()*360)grow_object(new_branch)GetPos(new_branch.location.end)@Ge]bud(bud_parameters)
+
+# -----------------------------------------------------------------------------
+# GEOMETRIC INTERPRETATION (HOMOMORPHISM)
+# -----------------------------------------------------------------------------
+# Map abstract L-System modules to concrete 3D geometry for rendering.
+# These rules define how the symbolic representation becomes visual.
 
 homomorphism:
 
+# Internode segments become cylinders with length and radius
 I(a,r,o) --> F(a,r)
+# Branch segments also become cylinders
 S(a,r,o) --> F(a,r)
 
-production:   
-Attractors(support):
-  pttodisplay = support.attractor_grid.get_enabled_points()
-  if len(pttodisplay) > 0:
-    produce [,(3) @g(PointSet(pttodisplay,width=simulation_config.attractor_point_width))]
+# -----------------------------------------------------------------------------
+# ATTRACTOR VISUALIZATION
+# -----------------------------------------------------------------------------
+# Additional production rules for displaying trellis attractor points
+production:
+Attractors(trellis_support):
+  # Display enabled attractor points as visual markers
+  points_to_display = trellis_support.attractor_grid.get_enabled_points()
+  if len(points_to_display) > 0:
+    produce [,(3) @g(PointSet(points_to_display,width=simulation_config.attractor_point_width))]

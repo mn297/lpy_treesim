@@ -243,3 +243,110 @@ def decide_guide(energy_matrix, branches, arch, simulation_config):
         energy_matrix[branch_idx, :] = np.inf
         # Set entire column (wire) to infinity - this wire can't accept more branches
         energy_matrix[:, wire_id] = np.inf
+
+
+def prune(lstring, simulation_config):
+    """
+    Prune old branches that exceed the age threshold and haven't been tied to wires.
+
+    This function implements the pruning strategy for the tree training simulation.
+    It identifies branches that have grown too old (exceeding the pruning age threshold)
+    but haven't been successfully tied to trellis wires. Such branches are considered
+    unproductive and are removed from the L-System to encourage new growth.
+
+    The pruning criteria are:
+    1. Branch age exceeds the configured pruning threshold
+    2. Branch has not been tied to any trellis wire
+    3. Branch has not already been marked for cutting
+
+    When a branch meets all criteria, it is:
+    - Marked as cut (to prevent re-processing)
+    - Removed from the L-System string using cut_from()
+
+    Args:
+        lstring: The current L-System string containing modules and their parameters
+
+    Returns:
+        bool: True if a branch was pruned, False if no eligible branches found
+
+    Note:
+        This function processes one branch at a time and returns immediately after
+        pruning a single branch. It should be called repeatedly (e.g., in a while loop)
+        until no more pruning operations are possible. The cut_from() function handles
+        the actual removal of the branch and any dependent substructures from the string.
+    """
+    for position, symbol in enumerate(lstring):
+        # Check if this is a WoodStart module (represents a branch)
+        if symbol.name == 'WoodStart':
+            branch = symbol[0].type
+
+            # Check pruning criteria
+            age_exceeds_threshold = branch.info.age > simulation_config.pruning_age_threshold
+            not_tied_to_wire = not branch.tying.has_tied
+            not_already_cut = not branch.info.cut
+
+            # Prune if all criteria are met
+            if age_exceeds_threshold and not_tied_to_wire and not_already_cut:
+                # Mark branch as cut to prevent re-processing
+                branch.info.cut = True
+
+                # Remove the branch from the L-System string
+                lstring = cut_from(position, lstring)
+
+                return True
+
+    return False
+
+
+
+def tie(lstring, simulation_config):
+    """
+    Perform tying operation on eligible branches in the L-System string.
+    
+    This function searches through the L-System string for 'WoodStart' modules that
+    represent branches ready for tying to trellis wires. It identifies branches that:
+    1. Have tying properties (tying attribute exists)
+    2. Have a defined tie axis (tie_axis is not None)
+    3. Have not been tied yet (tie_updated is False)
+    4. Have guide points available for wire attachment
+    
+    When an eligible branch is found, it performs the tying operation by:
+    - Marking the branch as tied (tie_updated = False)
+    - Adding the branch to the target wire
+    - Calling the branch's tie_lstring method to modify the L-System string
+    
+    Args:
+        lstring: The current L-System string containing modules and their parameters
+        
+    Returns:
+        bool: True if a tying operation was performed, False if no eligible branches found
+        
+    Note:
+        This function processes one branch at a time and returns immediately after
+        tying a single branch. It should be called repeatedly (e.g., in a while loop)
+        until no more tying operations are possible.
+    """
+    for position, symbol in enumerate(lstring):
+        # Check if this is a WoodStart module with tying capabilities
+        if (symbol == 'WoodStart' and 
+            hasattr(symbol[0].type, 'tying') and 
+            getattr(symbol[0].type.tying, 'tie_axis', None) is not None):
+            
+            branch = symbol[0].type
+            
+            # Skip branches that have already been processed for tying
+            if not branch.tying.tie_updated:
+                continue
+                
+            # Check if branch has guide points for wire attachment
+            if branch.tying.guide_points:
+                # Perform the tying operation
+                branch.tying.tie_updated = False
+                branch.tying.guide_target.add_branch()
+                
+                # Update the L-System string with tying modifications
+                lstring, modifications_count = branch.tie_lstring(lstring, position)
+                
+                return True
+    
+    return False

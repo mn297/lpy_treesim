@@ -184,3 +184,37 @@ class UFOSimulationConfig:
     
     # Visualization Parameters
     attractor_point_width: int = 10  # Width of attractor points in visualization
+
+def generate_points_ufo():
+    """
+    Generate 3D points for the UFO trellis wire structure.
+    
+    Creates a linear array of wire attachment points along the x-axis at a fixed
+    height (z) and depth (y). The points are spaced evenly within the configured
+    x-range and used to construct the trellis support structure.
+    
+    Returns:
+        list: List of (x, y, z) tuples representing wire attachment points,
+              where all points share the same y and z coordinates.
+              
+    Configuration parameters used:
+        - ufo_x_range: Tuple (min_x, max_x) defining the range of x coordinates
+        - ufo_x_spacing: Spacing between consecutive x coordinates
+        - ufo_z_value: Fixed z-coordinate (height) for all points
+        - ufo_y_value: Fixed y-coordinate (depth) for all points
+    """
+    x = np.arange(
+        simulation_config.ufo_x_range[0],
+        simulation_config.ufo_x_range[1], 
+        simulation_config.ufo_x_spacing
+    ).astype(float)
+    z = np.full((x.shape[0],), simulation_config.ufo_z_value).astype(float)
+    y = np.full((x.shape[0],), simulation_config.ufo_y_value).astype(float)
+    
+    wire_attachment_points = []
+    for point_index in range(x.shape[0]):
+        wire_attachment_points.append((x[point_index], y[point_index], z[point_index]))
+    
+    return wire_attachment_points
+
+  
