@@ -102,7 +102,7 @@ class Branch(BasicWood):
   def is_bud_break(self, num_buds_segment):
       if num_buds_segment >= 2:
         return False
-      if (rd.random() < 0.2*(1 - self.num_buds/self.max_buds_segment)):
+      if (rd.random() < 0.2*(1 - self.num_buds/self.growth.max_buds_segment)):
 
         return True  
       
@@ -319,7 +319,7 @@ bud(t) :
    parent_child_dict[t.type.name].append(new_object)
    #Store new object somewhere
    t.num_buds+=1
-   t.type.num_branches+=1
+   t.type.info.num_branches+=1
 
    if 'LittleBranch' in new_object.name:
      import time

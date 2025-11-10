@@ -36,7 +36,7 @@ class Spur(BasicWood):
     
     # Keep count of number of leaves to not go over max_leaves
     self.num_leaves = 0
-    self.prunable = False
+    self.info.prunable = False
     
     # Every branch gets its own contour when it is constructed to ensure
     # branches each having a unique profile curve 
@@ -77,7 +77,7 @@ class Branch(BasicWood):
   def is_bud_break(self, num_break_buds):
       if num_break_buds >= 1:
         return False
-      return (rd.random() < 0.5*(1 - self.num_buds_segment/self.max_buds_segment))
+      return (rd.random() < 0.5*(1 - self.num_buds_segment/self.growth.max_buds_segment))
     
   def create_branch(self):
       self.num_buds_segment += 1
@@ -141,7 +141,7 @@ class NonTrunk(BasicWood):
     if not name:
       self.name = str(self.__class__.__name__) +'_'+ str(self.__class__.count)      
     Branch.count+=1
-    self.prunable = False
+    self.info.prunable = False
     
     # Every branch gets its own contour when it is constructed to ensure
     # branches each having a unique profile curve
@@ -255,7 +255,7 @@ def pruning_strategy(lstring):  # Remove remnants of cut
     cut = False  # Initialize the cut flag
     for j, i in enumerate(lstring):  # Loop through each element in the lstring
         if i.name == 'C' and i[0].type.info.age > 6 and i[0].type.tying.has_tied == False and i[0].type.info.cut == False and i[0].type.info.prunable and i[0].type.tying.guide_target==-1:
-            i[0].type.cut = True  # Set the cut flag to True
+            i[0].type.info.cut = True  # Set the cut flag to True
             lstring = cut_from(j, lstring)  # Cut the branch using string manipulation
             #TODO: Remove branch from parent_child dict and wire
             #if i[0].type.guide_target!=-1:
@@ -361,7 +361,7 @@ bud(t) :
      parent_child_dict[t.type.name].append(new_object)
      #Store new object somewhere
      t.num_buds+=1
-     t.type.num_branches+=1
+     t.type.info.num_branches+=1
 
      # Set a curve for tertiary branches to follow as they grow 
      if 'NonTrunk' in new_object.name:

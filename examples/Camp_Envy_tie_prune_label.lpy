@@ -122,7 +122,7 @@ class Branch(BasicWood):
     self.contour = create_noisy_circle_curve(1, .2, 30)
                
   def is_bud_break(self, num_buds_segment):
-      return (rd.random() < 0.01*(1 - self.num_buds_segment/self.max_buds_segment))
+      return (rd.random() < 0.01*(1 - self.num_buds_segment/self.growth.max_buds_segment))
     
   def create_branch(self):
       self.num_buds_segment += 1
@@ -154,7 +154,7 @@ class Trunk(BasicWood):
     self.contour = create_noisy_circle_curve(1, .2, 30)
     
   def is_bud_break(self, num_buds_segment):
-    if (rd.random() > 0.2*(1 - num_buds_segment/self.max_buds_segment)):
+    if (rd.random() > 0.2*(1 - num_buds_segment/self.growth.max_buds_segment)):
       return False
     return True
     
@@ -186,7 +186,7 @@ class NonTrunk(BasicWood):
     self.contour = create_noisy_circle_curve(1, .2, 30)
                
   def is_bud_break(self, num_buds_segment):
-      return (rd.random() < 0.02*(1 - num_buds_segment/self.max_buds_segment))
+      return (rd.random() < 0.02*(1 - num_buds_segment/self.growth.max_buds_segment))
     
   def create_branch(self):
       if rd.random()>0.9:
@@ -291,7 +291,7 @@ def pruning_strategy(lstring): #Remove remnants of cut
   for j,i in enumerate(lstring):
     if i.name == 'C' and i[0].type.info.age > 6 and i[0].type.tying.has_tied == False and i[0].type.info.cut == False:
       
-      i[0].type.cut = True      
+      i[0].type.info.cut = True      
       #print("Cutting", i[0].type.name) 
       lstring = cut_using_string_manipulation(j, lstring)
       return True
@@ -528,7 +528,7 @@ bud(t) :
    parent_child_dict[t.type.name].append(new_object)
    #Store new object somewhere
    t.num_buds+=1
-   t.type.num_branches+=1
+   t.type.info.num_branches+=1
    
    # set a different cross section for every branch
    if 'Leaf' not in new_object.name and 'Apple' not in new_object.name:
