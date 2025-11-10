@@ -8,7 +8,8 @@ import time
 from helper import *
 import numpy as np
 import random as rd
-from examples.UFO.UFOconfigs import basicwood_prototypes, Trunk, Branch, TertiaryBranch, Spur, UFOSimulationConfig, generate_points_ufo
+from examples.UFO.UFO_prototypes import basicwood_prototypes, Trunk
+from examples.UFO.UFO_simulation import UFOSimulationConfig, generate_points_ufo, get_energy_mat, decide_guide, tie, prune
 from dataclasses import dataclass
 
 
@@ -20,7 +21,7 @@ simulation_config = UFOSimulationConfig()
 
 
 
-trellis_support = Support(generate_points_ufo(), simulation_config.support_num_wires, simulation_config.support_spacing_wires, simulation_config.support_trunk_wire_point)
+trellis_support = Support(generate_points_ufo(simulation_config), simulation_config.support_num_wires, simulation_config.support_spacing_wires, simulation_config.support_trunk_wire_point)
 tying_interval_iterations = simulation_config.num_iteration_tie
 pruning_interval_iterations = simulation_config.num_iteration_prune
 main_trunk.tying.guide_target = trellis_support.trunk_wire
@@ -150,7 +151,7 @@ module WoodStart     # Starting point of wood segments (used for tying operation
 # GLOBAL L-SYSTEM PARAMETERS
 # -----------------------------------------------------------------------------
 # Create a growth guide curve for the initial trunk development
-trunk_guide_curve = create_bezier_curve(x_range = (-1, 1), y_range = (-1, 1), z_range = (0, 10), seed_val=time.time())
+trunk_guide_curve = create_bezier_curve(x_range = (-1, 1), y_range = (-1, 1), z_range = (0, 10), seed_value=time.time())
 
 # -----------------------------------------------------------------------------
 # AXIOM (STARTING STRING)
@@ -223,7 +224,7 @@ bud(bud_parameters) :
    if hasattr(new_branch, 'curve_x_range'):
      # Curved branches: set up custom growth guide curve
      import time
-     curve = create_bezier_curve(x_range=new_branch.curve_x_range, y_range=new_branch.curve_y_range, z_range=new_branch.curve_z_range, seed_val=time.time())
+     curve = create_bezier_curve(x_range=new_branch.curve_x_range, y_range=new_branch.curve_y_range, z_range=new_branch.curve_z_range, seed_value=time.time())
      nproduce[@GcSetGuide(curve, new_branch.growth.max_length)
    else:
      # Straight branches: use default orientation
