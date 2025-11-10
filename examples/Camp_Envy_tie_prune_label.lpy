@@ -83,7 +83,7 @@ class Spur(BasicWood):
       self.name = str(self.__class__.__name__) +'_'+ str(self.__class__.count)   
     Spur.count+=1
     self.num_leaves = 0
-    self.contour = create_noisy_circle_curve(1, .2, 30)
+    self.contour = create_noisy_branch_contour(1, .2, 30)
     
   def is_bud_break(self, num_buds_segment):
       return (rd.random() < 0.1)
@@ -119,7 +119,7 @@ class Branch(BasicWood):
       self.name = str(self.__class__.__name__) +'_'+ str(self.__class__.count)      
     Branch.count+=1
     self.num_buds_segment=0
-    self.contour = create_noisy_circle_curve(1, .2, 30)
+    self.contour = create_noisy_branch_contour(1, .2, 30)
                
   def is_bud_break(self, num_buds_segment):
       return (rd.random() < 0.01*(1 - self.num_buds_segment/self.growth.max_buds_segment))
@@ -151,7 +151,7 @@ class Trunk(BasicWood):
     if not name:
       self.name = str(self.__class__.__name__) +'_'+ str(self.__class__.count)      
     Trunk.count+=1
-    self.contour = create_noisy_circle_curve(1, .2, 30)
+    self.contour = create_noisy_branch_contour(1, .2, 30)
     
   def is_bud_break(self, num_buds_segment):
     if (rd.random() > 0.2*(1 - num_buds_segment/self.growth.max_buds_segment)):
@@ -183,7 +183,7 @@ class NonTrunk(BasicWood):
     if not name:
       self.name = str(self.__class__.__name__) +'_'+ str(self.__class__.count)      
     Branch.count+=1
-    self.contour = create_noisy_circle_curve(1, .2, 30)
+    self.contour = create_noisy_branch_contour(1, .2, 30)
                
   def is_bud_break(self, num_buds_segment):
       return (rd.random() < 0.02*(1 - num_buds_segment/self.growth.max_buds_segment))
@@ -335,7 +335,7 @@ rd.seed(seed_val)
 
 
 # Added by Camp    
-def create_noisy_circle_curve(radius, noise_factor, num_points=100, seed=None):
+def create_noisy_branch_contour(radius, noise_factor, num_points=100, seed=None):
     if seed is not None:
         rd.seed(seed)
     t = np.linspace(0, 2 * np.pi, num_points, endpoint=False)
@@ -463,13 +463,13 @@ def make_leaf_guide():
 
  
 def reset_contour():
-  default_curve = create_noisy_circle_curve(1, 0, 30)  # Example of a simple default contour
+  default_curve = create_noisy_branch_contour(1, 0, 30)  # Example of a simple default contour
   nproduce SetContour(default_curve)
 
 global profile1, profile2, profile3    
-profile1 = create_noisy_circle_curve(1, .2, 30, 23)
-profile2 = create_noisy_circle_curve(1, .2, 30)
-profile3 = create_noisy_circle_curve(1, .2, 30)
+profile1 = create_noisy_branch_contour(1, .2, 30, 23)
+profile2 = create_noisy_branch_contour(1, .2, 30)
+profile3 = create_noisy_branch_contour(1, .2, 30)
 # print("Labelling: ", label)
 # print("Seed ", seed_val)
 

@@ -2,35 +2,101 @@
 Defines the abstract class BasicWood, class Wire and class Support.
 """
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from openalea.plantgl.all import *
 import copy
 import numpy as np
 from openalea.plantgl.scenegraph.cspline import CSpline
 import random as rd
-
+from helper import create_noisy_branch_contour
 import collections
+from dataclasses import dataclass
+from typing import Tuple
+
 eps = 1e-6
 
-from abc import ABC, abstractmethod
-# class Tree():
-#   #branch_dict = {}
-#   trunk_dict = {}
-#   """ This class will have all the parameters required to grow the tree, i.e. the transition
-#   prob, max trunk length, max branch length etc. Each tree will have its own children branch and trunk classes """
-#   def __init__(self):
-#     self.trunk_num_buds_segment = 5
-#     self.branch_num_buds_segment = 5
-#     self.trunk_bud_break_prob = 0.5
-#     self.branch_bud_break_prob = 0.5
-#     self.num_branches = 0
-#     self.num_trunks = 0
+@dataclass
+class LocationState:
+    """Location tracking for a wood object: start point, end point, and last tie location."""
+    start: any = None  # Vector3
+    end: any = None    # Vector3
+    last_tie_location: any = None  # Vector3
     
-    
-# # BRANCH AND TRUNK SUBCLASS OF WOOD		
+    def __post_init__(self):
+        """Initialize Vector3 points if not provided."""
+        if self.start is None:
+            self.start = Vector3(0, 0, 0)
+        if self.end is None:
+            self.end = Vector3(0, 0, 0)
+        if self.last_tie_location is None:
+            self.last_tie_location = Vector3(0, 0, 0)
 
+@dataclass
+class TyingState:
+    """Tying and guiding state for a wood object."""
+    has_tied: bool = False
+    guide_points: list = None  # List of (x,y,z) tuples for spline control points
+    guide_target: any = -1  # Wire object or -1 (no target)
+    tie_axis: tuple = (0, 1, 1)  # Direction vector for the wire axis
+    tie_updated: bool = False
+    
+    def __post_init__(self):
+        """Initialize guide_points as empty list if not provided."""
+        if self.guide_points is None:
+            self.guide_points = []
+
+@dataclass
+class GrowthState:
+    """Growth parameters for a wood object."""
+    max_buds_segment: int = 5
+    thickness: float = 0.1
+    thickness_increment: float = 0.01
+    growth_length: float = 1.0
+    max_length: float = 7.0
+
+@dataclass
+class InfoState:
+    """Information/metadata for a wood object."""
+    age: int = 0
+    cut: bool = False
+    prunable: bool = True
+    order: int = 0
+    num_branches: int = 0
+    color: int = 0
+    material: int = 0
+    branch_dict: any = None  # collections.deque
+    
+    def __post_init__(self):
+        """Initialize branch_dict if not provided."""
+        if self.branch_dict is None:
+            self.branch_dict = collections.deque()
+
+@dataclass
+class BasicWoodConfig:
+    """Configuration parameters for BasicWood initialization."""
+    copy_from: any = None
+    max_buds_segment: int = 5
+    thickness: float = 0.1
+    thickness_increment: float = 0.01
+    growth_length: float = 1.0
+    max_length: float = 7.0
+    tie_axis: tuple = None
+    order: int = 0
+    color: int = 0
+    material: int = 0
+    name: str = None
+    bud_spacing_age: int = 2  # Age interval for bud creation
+    
+    # Curve parameters for L-System growth guides
+    curve_x_range: tuple = (-0.5, 0.5)  # X bounds for Bezier curve control points
+    curve_y_range: tuple = (-0.5, 0.5)  # Y bounds for Bezier curve control points  
+    curve_z_range: tuple = (-1, 1)      # Z bounds for Bezier curve control points
+    
+    def __post_init__(self):
+        """Initialize mutable defaults if needed."""
+        pass
+    
 class BasicWood(ABC):
-
   @staticmethod
   def clone(obj):
     try:
@@ -38,11 +104,33 @@ class BasicWood(ABC):
     except copy.Error:
         raise copy.Error(f'Not able to copy {obj}') from None
 
-  def __init__(self, copy_from = None, max_buds_segment: int = 5, thickness: float = 0.1,\
-               thickness_increment: float = 0.01, growth_length: float = 1., max_length: float = 7.,\
-               tie_axis: list = (0,1,1),  order: int = 0, color: int = 0, material = 0, name: str = None):#,\
-               #bud_break_prob_func: "Function" = lambda x,y: rd.random()):
-                 
+  def __init__(self, config=None, copy_from=None, **kwargs):
+    
+    # Validate parameters
+    if copy_from is None and config is None:
+      raise ValueError("Either 'config' or 'copy_from' must be provided")
+    
+    # Handle config-based initialization
+    if config is not None and isinstance(config, BasicWoodConfig):
+      # Use config values
+      copy_from = config.copy_from if copy_from is None else copy_from
+      max_buds_segment = config.max_buds_segment
+      thickness = config.thickness
+      thickness_increment = config.thickness_increment
+      growth_length = config.growth_length
+      max_length = config.max_length
+      tie_axis = config.tie_axis
+      order = config.order
+      color = config.color
+      material = config.material
+      name = config.name
+      bud_spacing_age = config.bud_spacing_age
+      curve_x_range = config.curve_x_range
+      curve_y_range = config.curve_y_range
+      curve_z_range = config.curve_z_range
+    elif copy_from is None:
+      raise ValueError("config must be provided when copy_from is None")
+    
     #Location variables
     if copy_from:
       self.__copy_constructor__(copy_from)
@@ -62,6 +150,13 @@ class BasicWood(ABC):
         growth_length=growth_length,
         max_length=max_length
     )
+    # Bud spacing for L-System rules
+    self.bud_spacing_age = bud_spacing_age
+    
+    # Curve parameters for L-System growth guides
+    self.curve_x_range = curve_x_range
+    self.curve_y_range = curve_y_range
+    self.curve_z_range = curve_z_range
     
     
     
@@ -70,15 +165,7 @@ class BasicWood(ABC):
     for k,v in update_dict.items():
       setattr(self, k, v)
     #self.__dict__.update(update_dict)
-  
-  # ===== Location property accessors for backward compatibility =====
-  
-  # ===== Tying property accessors for backward compatibility =====
-  
-  # ===== Growth property accessors for backward compatibility =====
-  
-  # ===== Info property accessors for backward compatibility =====
-  
+
   @abstractmethod
   def is_bud_break(self) -> bool:
     """This method defines if a bud will break or not -> returns true for yes, false for not. Input can be any variables"""
@@ -291,64 +378,52 @@ class BasicWood(ABC):
     return parallel_component, perpendicular_component
   
 
-from dataclasses import dataclass
-from typing import Tuple
 
-@dataclass
-class LocationState:
-    """Location tracking for a wood object: start point, end point, and last tie location."""
-    start: any = None  # Vector3
-    end: any = None    # Vector3
-    last_tie_location: any = None  # Vector3
+class TreeBranch(BasicWood):
+    """Base class for all tree branch types with common initialization logic"""
     
-    def __post_init__(self):
-        """Initialize Vector3 points if not provided."""
-        if self.start is None:
-            self.start = Vector3(0, 0, 0)
-        if self.end is None:
-            self.end = Vector3(0, 0, 0)
-        if self.last_tie_location is None:
-            self.last_tie_location = Vector3(0, 0, 0)
-
-@dataclass
-class TyingState:
-    """Tying and guiding state for a wood object."""
-    has_tied: bool = False
-    guide_points: list = None  # List of (x,y,z) tuples for spline control points
-    guide_target: any = -1  # Wire object or -1 (no target)
-    tie_axis: tuple = (0, 1, 1)  # Direction vector for the wire axis
-    tie_updated: bool = False
+    count = 0  # Class variable for instance counting
     
-    def __post_init__(self):
-        """Initialize guide_points as empty list if not provided."""
-        if self.guide_points is None:
-            self.guide_points = []
-
-@dataclass
-class GrowthState:
-    """Growth parameters for a wood object."""
-    max_buds_segment: int = 5
-    thickness: float = 0.1
-    thickness_increment: float = 0.01
-    growth_length: float = 1.0
-    max_length: float = 7.0
-
-@dataclass
-class InfoState:
-    """Information/metadata for a wood object."""
-    age: int = 0
-    cut: bool = False
-    prunable: bool = True
-    order: int = 0
-    num_branches: int = 0
-    color: int = 0
-    material: int = 0
-    branch_dict: any = None  # collections.deque
+    def __init__(self, config=None, copy_from=None, prototype_dict: dict = {}, 
+                 name: str = None, contour_params: tuple = (1, 0.2, 30)):
+        
+        # Validate parameters
+        if copy_from is None and config is None:
+          raise ValueError("Either 'config' or 'copy_from' must be provided")
+        
+        # Call BasicWood constructor
+        super().__init__(config, copy_from)
+        
+        # Handle copy construction vs new instance
+        if copy_from:
+            # BasicWood already handled the copy, just set additional attributes
+            pass
+        else:
+            self.prototype_dict = prototype_dict    
+            
+        # Set name with automatic numbering
+        if not name:
+            self.name = f"{self.__class__.__name__}_{self.__class__.count}"
+        self.__class__.count += 1
+        
+        # Set up contour (subclasses can override contour_params)
+        radius, noise_factor, num_points = contour_params
+        self.contour = create_noisy_branch_contour(radius, noise_factor, num_points)
+        
+        # Initialize common attributes
+        self.num_buds = 0
+        
+        # Initialize subclass-specific attributes
+        self._init_subclass_attributes()
     
-    def __post_init__(self):
-        """Initialize branch_dict if not provided."""
-        if self.branch_dict is None:
-            self.branch_dict = collections.deque()
+    def _init_subclass_attributes(self):
+        """Hook for subclasses to initialize their specific attributes"""
+        pass
+    
+    def grow(self):
+        """Default empty implementation - subclasses can override if needed"""
+        pass
+    
 
 @dataclass
 class Wire:

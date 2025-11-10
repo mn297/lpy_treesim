@@ -3,7 +3,7 @@ Tying, Pruning and lablelling UFO architecture trees
 """
 import sys
 sys.path.append('../')
-from stochastic_tree import Support, BasicWood
+from stochastic_tree import Support, BasicWood, TreeBranch, BasicWoodConfig
 import numpy as np
 import random as rd
 import copy
@@ -13,24 +13,12 @@ from helper import *
 
 # Used to set the contour back to a circle after it has been changed for a branch
 def reset_contour():
-  default_curve = create_noisy_circle_curve(1, 0, 30)  # Example of a simple default contour
+  default_curve = create_noisy_branch_contour(1, 0, 30)  # Example of a simple default contour
   nproduce SetContour(default_curve)
 
-class Spur(BasicWood):
-  count = 0
-  def __init__(self, copy_from = None, max_buds_segment: int = 5, thickness: float = 0.1,\
-               thickness_increment: float = 0.01, growth_length: float = 1., max_length: float = 7.,\
-               tie_axis: tuple = (0,1,1), order: int = 1, prototype_dict: dict = {}, name = None, color = None):
-    super().__init__(copy_from, max_buds_segment,thickness, thickness_increment, growth_length,\
-               max_length, tie_axis,  order, color)
-    if copy_from:
-      self.__copy_constructor__(copy_from)     
-    else:
-      self.prototype_dict = prototype_dict    
-    if not name:
-      self.name = str(self.__class__.__name__) +'_'+ str(self.__class__.count)
-    Spur.count+=1
-    self.contour = create_noisy_circle_curve(1, .2, 30)
+class Spur(TreeBranch):
+  def __init__(self, config=None, copy_from=None, prototype_dict: dict = {}):
+    super().__init__(config, copy_from, prototype_dict)
 
   def is_bud_break(self, num_buds_segment):
     if num_buds_segment >= self.growth.max_buds_segment:
@@ -39,29 +27,11 @@ class Spur(BasicWood):
     
   def create_branch(self):
     return None
-  
-  def grow(self):
-    pass
     
    
-class LittleBranch(BasicWood):
-  count = 0
-  def __init__(self, copy_from = None,  max_buds_segment: int = 40, thickness: float = 0.1,\
-               thickness_increment: float = 0.01, growth_length: float = 1., max_length: float = 7.,\
-               tie_axis: tuple = (0,1,1), order: int = 1, prototype_dict: dict = {}, name = None, color = None):
-    
-    super().__init__(copy_from, max_buds_segment,thickness, thickness_increment, growth_length,\
-               max_length, tie_axis,  order, color)
-    if copy_from:
-      self.__copy_constructor__(copy_from)
-    else:
-      self.prototype_dict = prototype_dict        
-        
-    if not name:
-      self.name = str(self.__class__.__name__) +'_'+ str(self.__class__.count)      
-    LittleBranch.count+=1
-    self.num_buds = 0
-    self.contour = create_noisy_circle_curve(1, .2, 30)
+class TertiaryBranch(TreeBranch):
+  def __init__(self, config=None, copy_from=None, prototype_dict: dict = {}):
+    super().__init__(config, copy_from, prototype_dict)
 
   def is_bud_break(self, num_buds_segment):
     if num_buds_segment >= 2:
@@ -75,29 +45,11 @@ class LittleBranch(BasicWood):
         new_ob = Branch(copy_from = self.prototype_dict['side_branch'])
       else:
         new_ob = Spur(copy_from = self.prototype_dict['spur'])
-      return new_ob
-  
-  def grow(self):
-    pass  
+      return new_ob  
     
-class Branch(BasicWood):
-  count = 0
-  def __init__(self, copy_from = None,  max_buds_segment: int = 140, thickness: float = 0.1,\
-               thickness_increment: float = 0.01, growth_length: float = 1., max_length: float = 7.,\
-               tie_axis: tuple = (0,1,1), order: int = 1, prototype_dict: dict = {}, name = None, color = None):
-    
-    super().__init__(copy_from, max_buds_segment,thickness, thickness_increment, growth_length,\
-               max_length, tie_axis,  order, color)
-    if copy_from:
-      self.__copy_constructor__(copy_from)
-    else:
-      self.prototype_dict = prototype_dict        
-        
-    if not name:
-      self.name = str(self.__class__.__name__) +'_'+ str(self.__class__.count)      
-    Branch.count+=1
-    self.num_buds = 0
-    self.contour = create_noisy_circle_curve(1, .2, 30)
+class Branch(TreeBranch):
+  def __init__(self, config=None, copy_from=None, prototype_dict: dict = {}):
+    super().__init__(config, copy_from, prototype_dict)
 
   def is_bud_break(self, num_buds_segment):
       if num_buds_segment >= 2:
@@ -109,35 +61,18 @@ class Branch(BasicWood):
   def create_branch(self):
     try:
       if rd.random()>0.9:
-        new_ob = LittleBranch(copy_from = self.prototype_dict['side_branch'])
+        new_ob = TertiaryBranch(copy_from = self.prototype_dict['side_branch'])
       else:
         new_ob = Spur(copy_from = self.prototype_dict['spur'])
     except:
       return None
-    return new_ob
-  
-  def grow(self):
-    pass  
+    return new_ob  
  
     
-class Trunk(BasicWood):
-  count = 0
+class Trunk(TreeBranch):
   """ Details of the trunk while growing a tree, length, thickness, where to attach them etc """
-  def __init__(self, copy_from = None, max_buds_segment: int = 60, thickness: float = 0.1,\
-               thickness_increment: float = 0.01, growth_length: float = 1., max_length: float = 7.,\
-               tie_axis: tuple = (0,1,1), order: int = 0, prototype_dict: dict = {}, name = None, color = None):
-       
-    super().__init__(copy_from, max_buds_segment,thickness, thickness_increment, growth_length,\
-               max_length, tie_axis,  order, color)
-    if copy_from:
-      self.__copy_constructor__(copy_from)
-    else:
-      self.prototype_dict = prototype_dict    
-    if not name:
-      self.name = str(self.__class__.__name__) +'_'+ str(self.__class__.count)      
-    Trunk.count+=1
-    self.num_buds = 0
-    self.contour = create_noisy_circle_curve(1, .2, 30)
+  def __init__(self, config=None, copy_from=None, prototype_dict: dict = {}):
+    super().__init__(config, copy_from, prototype_dict)
 
   def is_bud_break(self, num_buds_segment):
     if num_buds_segment >= self.growth.max_buds_segment:
@@ -150,21 +85,58 @@ class Trunk(BasicWood):
   def create_branch(self):
     if rd.random() > 0.1:
       return Branch(copy_from = self.prototype_dict['branch'])
-  
-  def grow(self):
-    pass
                
 
 
-      
-#Pass transition probabs? --> solve with abstract classes
-growth_length = 0.1
+# growth_length = 0.1
 basicwood_prototypes = {}
-basicwood_prototypes['spur'] = Spur(tie_axis = (1, 0, 0), max_length = 0.1, thickness = 0.003, growth_length = growth_length/2, thickness_increment = 0., prototype_dict = basicwood_prototypes, color = [0, 255, 0])
-basicwood_prototypes['side_branch'] = LittleBranch(tie_axis = (0, 0, 1), max_length = 0.25, thickness = 0.003, growth_length =growth_length/2, thickness_increment = 0.00001, prototype_dict = basicwood_prototypes, color = [0, 255, 0])
 
-basicwood_prototypes['trunk'] = Trunk(tie_axis = (1, 0, 0), max_length = 3, thickness = 0.02, thickness_increment = 0.00001, growth_length = growth_length, prototype_dict = basicwood_prototypes, color = [255, 0, 0])
-basicwood_prototypes['branch'] = Branch(tie_axis = (0, 0, 1), max_length = 2.5, thickness = 0.01, thickness_increment = 0.00001, growth_length = growth_length, prototype_dict = basicwood_prototypes, color = [255, 150, 0])
+# Create configs for cleaner prototype setup
+spur_config = BasicWoodConfig(
+    max_buds_segment=5,
+    tie_axis=(1, 0, 0), 
+    max_length=0.1, 
+    thickness=0.003, 
+    growth_length=0.05, 
+    thickness_increment=0., 
+    color=[0, 255, 0]
+)
+
+side_branch_config = BasicWoodConfig(
+    max_buds_segment=40,
+    tie_axis=(0, 0, 1), 
+    max_length=0.25, 
+    thickness=0.003, 
+    growth_length=0.05, 
+    thickness_increment=0.00001, 
+    color=[0, 255, 0]
+)
+
+trunk_config = BasicWoodConfig(
+    max_buds_segment=60,
+    tie_axis=(1, 0, 0), 
+    max_length=3, 
+    thickness=0.02, 
+    thickness_increment=0.00001, 
+    growth_length=0.1, 
+    color=[255, 0, 0]
+)
+
+branch_config = BasicWoodConfig(
+    max_buds_segment=140,
+    tie_axis=(0, 0, 1), 
+    max_length=2.5, 
+    thickness=0.01, 
+    thickness_increment=0.00001, 
+    growth_length=0.1, 
+    color=[255, 150, 0]
+)
+
+# Setup prototypes using configs
+basicwood_prototypes['spur'] = Spur(config=spur_config, prototype_dict=basicwood_prototypes)
+basicwood_prototypes['side_branch'] = TertiaryBranch(config=side_branch_config, prototype_dict=basicwood_prototypes)
+basicwood_prototypes['trunk'] = Trunk(config=trunk_config, prototype_dict=basicwood_prototypes)
+basicwood_prototypes['branch'] = Branch(config=branch_config, prototype_dict=basicwood_prototypes)
 
 #init  
 trunk_base = Trunk(copy_from = basicwood_prototypes['trunk'])
@@ -321,7 +293,7 @@ bud(t) :
    t.num_buds+=1
    t.type.info.num_branches+=1
 
-   if 'LittleBranch' in new_object.name:
+   if 'TertiaryBranch' in new_object.name:
      import time
      curve = create_bezier_curve(x_range=(-.5, .5), y_range=(-.5, .5), z_range=(-1, 1), seed_val=time.time())
      nproduce[@GcSetGuide(curve, new_object.growth.max_length)

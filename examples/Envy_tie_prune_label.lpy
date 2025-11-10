@@ -40,7 +40,7 @@ class Spur(BasicWood):
     
     # Every branch gets its own contour when it is constructed to ensure
     # branches each having a unique profile curve 
-    self.contour = create_noisy_circle_curve(radius = 2, noise_factor = .2, num_points = 30)
+    self.contour = create_noisy_branch_contour(radius = 2, noise_factor = .2, num_points = 30)
     
   def is_bud_break(self, num_buds_segment):
       return (rd.random() < 0.1)
@@ -72,7 +72,7 @@ class Branch(BasicWood):
     
     # Every branch gets its own contour when it is constructed to ensure
     # branches each having a unique profile curve
-    self.contour = create_noisy_circle_curve(1, .5, 30)
+    self.contour = create_noisy_branch_contour(1, .5, 30)
                
   def is_bud_break(self, num_break_buds):
       if num_break_buds >= 1:
@@ -109,7 +109,7 @@ class Trunk(BasicWood):
     
     # Every branch gets its own contour when it is constructed to ensure
     # branches each having a unique profile curve
-    self.contour = create_noisy_circle_curve(3, 0.05, 30)
+    self.contour = create_noisy_branch_contour(3, 0.05, 30)
     
   def is_bud_break(self, num_buds_segment):
     if (rd.random() > 0.1*(1 - num_buds_segment/self.growth.max_buds_segment)):
@@ -145,7 +145,7 @@ class NonTrunk(BasicWood):
     
     # Every branch gets its own contour when it is constructed to ensure
     # branches each having a unique profile curve
-    self.contour = create_noisy_circle_curve(1, .2, 30)
+    self.contour = create_noisy_branch_contour(1, .2, 30)
                
   def is_bud_break(self, num_buds_segment):
       return (rd.random() < 0.5*(1 - num_buds_segment/self.growth.max_buds_segment))
@@ -304,7 +304,7 @@ rd.seed(seed_val)
 
 # Used to set the contour back to a circle after it has been changed for a branch 
 def reset_contour():
-  default_curve = create_noisy_circle_curve(1, 0, 30)  # Example of a simple default contour
+  default_curve = create_noisy_branch_contour(1, 0, 30)  # Example of a simple default contour
   nproduce SetContour(default_curve)
 
 

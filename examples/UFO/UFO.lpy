@@ -1,0 +1,201 @@
+"""
+Tying, Pruning and lablelling UFO architecture trees
+"""
+import sys
+sys.path.append('../../')
+from stochastic_tree import Support, BasicWood, TreeBranch, BasicWoodConfig
+import time
+from helper import *
+import numpy as np
+import random as rd
+from examples.UFO.UFOconfigs import basicwood_prototypes, Trunk, Branch, TertiaryBranch, Spur, UFOSimulationConfig
+from dataclasses import dataclass
+
+
+#init  
+trunk_base = Trunk(copy_from = basicwood_prototypes['trunk'])
+time_count = 0
+
+# Create simulation configuration
+simulation_config = UFOSimulationConfig()
+
+def generate_points_ufo():
+    """
+    Generate 3D points for the UFO trellis wire structure.
+    
+    Creates a linear array of wire attachment points along the x-axis at a fixed
+    height (z) and depth (y). The points are spaced evenly within the configured
+    x-range and used to construct the trellis support structure.
+    
+    Returns:
+        list: List of (x, y, z) tuples representing wire attachment points,
+              where all points share the same y and z coordinates.
+              
+    Configuration parameters used:
+        - ufo_x_range: Tuple (min_x, max_x) defining the range of x coordinates
+        - ufo_x_spacing: Spacing between consecutive x coordinates
+        - ufo_z_value: Fixed z-coordinate (height) for all points
+        - ufo_y_value: Fixed y-coordinate (depth) for all points
+    """
+    x = np.arange(
+        simulation_config.ufo_x_range[0],
+        simulation_config.ufo_x_range[1], 
+        simulation_config.ufo_x_spacing
+    ).astype(float)
+    z = np.full((x.shape[0],), simulation_config.ufo_z_value).astype(float)
+    y = np.full((x.shape[0],), simulation_config.ufo_y_value).astype(float)
+    
+    pts = []
+    for i in range(x.shape[0]):
+        pts.append((x[i], y[i], z[i]))
+    
+    return pts
+
+  
+# def is_eligible_for_tying(module):
+#     """
+#     Check if a module represents an eligible branch segment for tying operations.
+    
+#     A module is eligible if it:
+#     - Is a 'WoodStart' symbol (completed branch segment)
+#     - Has tying functionality
+#     - Has a valid tie_axis (not None)
+    
+#     Args:
+#         module: L-System module to check
+        
+#     Returns:
+#         bool: True if module is eligible for tying
+#     """
+#     print("Checking eligibility for tying:", module)
+#     return (module == 'WoodStart' and 
+#             hasattr(module[0].type, 'tying') and 
+#             getattr(module[0].type.tying, 'tie_axis', None) is not None)
+support = Support(generate_points_ufo(), simulation_config.support_num_wires, simulation_config.support_spacing_wires, simulation_config.support_trunk_wire_point)
+num_iteration_tie = simulation_config.num_iteration_tie
+num_iteration_prune = simulation_config.num_iteration_prune
+trunk_base.tying.guide_target = support.trunk_wire
+###Tying stuff begins
+ 
+
+def tie(lstring):
+  for j,i in enumerate(lstring):
+    # print("Evaluating module for tying:", i)
+    if i == 'WoodStart' and hasattr(i[0].type, 'tying') and getattr(i[0].type.tying, 'tie_axis', None) is not None:
+      if i[0].type.tying.tie_updated == False:
+        continue
+      curr = i[0]
+      if i[0].type.tying.guide_points:
+        i[0].type.tying.tie_updated = False
+        i[0].type.tying.guide_target.add_branch()
+        lstring, count = i[0].type.tie_lstring(lstring, j)
+       
+        return True
+  return False
+        
+
+def StartEach(lstring):
+  global parent_child_dict, support, trunk_base
+  if support.trunk_wire and trunk_base.tying.tie_updated == False:
+    trunk_base.tie_update()
+
+  for i in parent_child_dict[trunk_base.name]:
+	  if i.tying.tie_updated == False:
+	    i.tie_update()
+    
+  
+def EndEach(lstring):
+  global parent_child_dict, support, num_iteration_tie
+  
+  tied = False  
+  if (getIterationNb()+1)%num_iteration_tie == 0:
+    
+    if support.trunk_wire :
+      trunk_base.update_guide(trunk_base.tying.guide_target) #Tie trunk one iteration before branches
+    energy_matrix = get_energy_mat(parent_child_dict[trunk_base.name], support, simulation_config)
+    decide_guide(energy_matrix, parent_child_dict[trunk_base.name], support, simulation_config)
+    for branch in parent_child_dict[trunk_base.name]:
+      branch.update_guide(branch.tying.guide_target)
+    while tie(lstring):
+      pass
+    if (getIterationNb() + 1) % num_iteration_prune == 0:
+     	 while pruning_strategy(lstring):  # Prune branches until no more can be pruned
+            pass
+  return lstring
+
+def pruning_strategy(lstring): #Remove remnants of cut
+  cut = False
+  for j,i in enumerate(lstring):
+    if i.name == 'WoodStart' and i[0].type.info.age > simulation_config.pruning_age_threshold and i[0].type.tying.has_tied == False and i[0].type.info.cut == False:
+      i[0].type.info.cut = True      
+      lstring = cut_from(j, lstring)
+      return True
+  return False
+  
+parent_child_dict = {}
+parent_child_dict[trunk_base.name] = []	
+label = simulation_config.label
+#Tie trunk
+module Attractors
+module grow_object
+module bud
+module WoodStart
+curve = create_bezier_curve(x_range = (-1, 1), y_range = (-1, 1), z_range = (0, 10), seed_val=time.time())
+Axiom: Attractors(support)SetGuide(curve, trunk_base.growth.max_length)[@GcGetPos(trunk_base.location.start)T(ParameterSet(type = trunk_base))&(270)/(0)grow_object(trunk_base)GetPos(trunk_base.location.end)]
+derivation length: simulation_config.derivation_length
+
+production:
+#Decide whether branch internode vs trunk internode need to be the same size.
+grow_object(o) :
+  if o == None:
+    produce *
+  if o.length >= o.growth.max_length:
+    nproduce *
+  else:
+    nproduce SetContour(o.contour)
+    o.grow_one()
+    if label:
+      r, g, b = o.info.color
+      nproduce SetColor(r,g,b)
+    if 'Spur' in o.name:
+      produce I(o.growth.growth_length, o.growth.thickness, o)bud(ParameterSet(type = o, num_buds = 0))@O(o.growth.thickness*simulation_config.thickness_multiplier)grow_object(o)
+    else:
+      nproduce I(o.growth.growth_length, o.growth.thickness, o)
+      if np.isclose(o.info.age % o.bud_spacing_age, 0, atol=simulation_config.bud_age_tolerance):
+          nproduce bud(ParameterSet(type = o, num_buds = 0))
+      produce grow_object(o)
+    #produce I(o.growth_length, o.thickness, o)bud(ParameterSet(type = o, num_buds = 0))grow_object(o)
+
+bud(t) :
+ if t.type.is_bud_break(t.num_buds):
+   new_object = t.type.create_branch()
+   if new_object == None:
+     produce *
+   parent_child_dict[new_object.name] = []	
+   parent_child_dict[t.type.name].append(new_object)
+   #Store new object somewhere
+   t.num_buds+=1
+   t.type.info.num_branches+=1
+
+   if hasattr(new_object, 'curve_x_range'):
+     import time
+     curve = create_bezier_curve(x_range=new_object.curve_x_range, y_range=new_object.curve_y_range, z_range=new_object.curve_z_range, seed_val=time.time())
+     nproduce[@GcSetGuide(curve, new_object.growth.max_length)
+   else:
+     nproduce [
+   nproduce @RGetPos(new_object.location.start)WoodStart(ParameterSet(type = new_object))/(rd.random()*360)&(rd.random()*360)grow_object(new_object)GetPos(new_object.location.end)@Ge]bud(t)
+ 
+   
+I(s,r,o) --> I(s,r+o.growth.thickness_increment, o)
+_(r) --> _(r+o.growth.thickness_increment)
+
+homomorphism:
+
+I(a,r,o) --> F(a,r)
+S(a,r,o) --> F(a,r)
+
+production:   
+Attractors(support):
+  pttodisplay = support.attractor_grid.get_enabled_points()
+  if len(pttodisplay) > 0:
+    produce [,(3) @g(PointSet(pttodisplay,width=simulation_config.attractor_point_width))]
