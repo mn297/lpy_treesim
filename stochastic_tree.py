@@ -37,7 +37,7 @@ class TyingState:
     has_tied: bool = False
     guide_points: list = None  # List of (x,y,z) tuples for spline control points
     guide_target: any = -1  # Wire object or -1 (no target)
-    tie_axis: tuple = (0, 1, 1)  # Direction vector for the wire axis
+    tie_axis: tuple = None  # Direction vector for the wire axis
     tie_updated: bool = False
     
     def __post_init__(self):

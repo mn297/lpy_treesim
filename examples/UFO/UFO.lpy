@@ -52,25 +52,7 @@ def generate_points_ufo():
     return pts
 
   
-# def is_eligible_for_tying(module):
-#     """
-#     Check if a module represents an eligible branch segment for tying operations.
-    
-#     A module is eligible if it:
-#     - Is a 'WoodStart' symbol (completed branch segment)
-#     - Has tying functionality
-#     - Has a valid tie_axis (not None)
-    
-#     Args:
-#         module: L-System module to check
-        
-#     Returns:
-#         bool: True if module is eligible for tying
-#     """
-#     print("Checking eligibility for tying:", module)
-#     return (module == 'WoodStart' and 
-#             hasattr(module[0].type, 'tying') and 
-#             getattr(module[0].type.tying, 'tie_axis', None) is not None)
+
 support = Support(generate_points_ufo(), simulation_config.support_num_wires, simulation_config.support_spacing_wires, simulation_config.support_trunk_wire_point)
 num_iteration_tie = simulation_config.num_iteration_tie
 num_iteration_prune = simulation_config.num_iteration_prune
@@ -80,8 +62,7 @@ trunk_base.tying.guide_target = support.trunk_wire
 
 def tie(lstring):
   for j,i in enumerate(lstring):
-    # print("Evaluating module for tying:", i)
-    if i == 'WoodStart' and hasattr(i[0].type, 'tying') and getattr(i[0].type.tying, 'tie_axis', None) is not None:
+    if (i == 'WoodStart' and hasattr(i[0].type, 'tying')) and getattr(i[0].type.tying, 'tie_axis', None) is not None:
       if i[0].type.tying.tie_updated == False:
         continue
       curr = i[0]
@@ -139,9 +120,10 @@ label = simulation_config.label
 module Attractors
 module grow_object
 module bud
+module branch
 module WoodStart
 curve = create_bezier_curve(x_range = (-1, 1), y_range = (-1, 1), z_range = (0, 10), seed_val=time.time())
-Axiom: Attractors(support)SetGuide(curve, trunk_base.growth.max_length)[@GcGetPos(trunk_base.location.start)T(ParameterSet(type = trunk_base))&(270)/(0)grow_object(trunk_base)GetPos(trunk_base.location.end)]
+Axiom: Attractors(support)SetGuide(curve, trunk_base.growth.max_length)[@GcGetPos(trunk_base.location.start)WoodStart(ParameterSet(type = trunk_base))&(270)/(0)grow_object(trunk_base)GetPos(trunk_base.location.end)]
 derivation length: simulation_config.derivation_length
 
 production:
