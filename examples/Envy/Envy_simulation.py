@@ -3,75 +3,69 @@ import numpy as np
 from helper import cut_from
 
 @dataclass
-class UFOSimulationConfig:
-    """Configuration for UFO trellis tree simulation parameters."""
-    
+class EnvySimulationConfig:
+    """Configuration for Envy trellis tree simulation parameters."""
+
     # Tying and Pruning
-    num_iteration_tie: int = 8
+    num_iteration_tie: int = 5
     num_iteration_prune: int = 16
-    
+
     # Display
     label: bool = True
-    
+
     # Support Structure
-    support_trunk_wire_point: tuple = (0.6, 0, 0.4)
-    support_num_wires: int = 7
+    support_trunk_wire_point = None
+    support_num_wires: int = 14
     support_spacing_wires: int = 1
-    
+
     # Point Generation
-    ufo_x_range: tuple = (0.65, 3)
-    ufo_x_spacing: float = 0.3
-    ufo_z_value: float = 1.4
-    ufo_y_value: float = 0
-    
+    trellis_x_value: float = 0.45
+    trellis_z_start: float = 0.6
+    trellis_z_end: float = 3.4
+    trellis_z_spacing: float = 0.45
+
     # Energy and Tying Parameters
+    energy_threshold: float = 0.25
+    energy_decay_factor: float = 105
+    tolerance: float = 1e-5
+        # Energy and Tying Parameters
     energy_distance_weight: float = 0.5  # Weight for distance in energy calculation (was hardcoded /2)
     energy_threshold: float = 1.0  # Maximum energy threshold for tying
     
-    # Pruning Parameters
-    pruning_age_threshold: int = 8  # Age threshold for pruning untied branches
-    
-    # L-System Parameters
-    derivation_length: int = 160  # Number of derivation steps
-    
-    # Growth Parameters
-    thickness_multiplier: float = 1.2  # Multiplier for internode thickness
-    tolerance: float = 1e-6  # Tolerance for age-based bud spacing
-    
-    # Visualization Parameters
-    attractor_point_width: int = 10  # Width of attractor points in visualization
 
-def generate_points_ufo(simulation_config):
+    # Pruning Parameters
+    pruning_age_threshold: int = 6
+
+    # L-System Parameters
+    derivation_length: int = 128
+
+    # Growth Parameters
+    growth_length: float = 0.1
+    bud_spacing_age: int = 2
+
+    # Visualization Parameters
+    attractor_point_width: int = 10
+
+
+def generate_points_v_trellis(simulation_config):
     """
-    Generate 3D points for the UFO trellis wire structure.
-    
+    Generate 3D points for the V-trellis wire structure.
+
     Creates a linear array of wire attachment points along the x-axis at a fixed
     height (z) and depth (y). The points are spaced evenly within the configured
-    x-range and used to construct the trellis support structure.
-    
-    Returns:
-        list: List of (x, y, z) tuples representing wire attachment points,
-              where all points share the same y and z coordinates.
-              
-    Configuration parameters used:
-        - ufo_x_range: Tuple (min_x, max_x) defining the range of x coordinates
-        - ufo_x_spacing: Spacing between consecutive x coordinates
-        - ufo_z_value: Fixed z-coordinate (height) for all points
-        - ufo_y_value: Fixed y-coordinate (depth) for all points
+    z-range and used to construct the trellis support structure.
     """
-    x = np.arange(
-        simulation_config.ufo_x_range[0],
-        simulation_config.ufo_x_range[1], 
-        simulation_config.ufo_x_spacing
-    ).astype(float)
-    z = np.full((x.shape[0],), simulation_config.ufo_z_value).astype(float)
-    y = np.full((x.shape[0],), simulation_config.ufo_y_value).astype(float)
-    
-    wire_attachment_points = []
-    for point_index in range(x.shape[0]):
-        wire_attachment_points.append((x[point_index], y[point_index], z[point_index]))
-    
-    return wire_attachment_points
+    x = np.full((7,), simulation_config.trellis_x_value).astype(float)
+    y = np.full((7,), 0).astype(float)
+    z = np.arange(simulation_config.trellis_z_start,
+                  simulation_config.trellis_z_end,
+                  simulation_config.trellis_z_spacing)
+
+    pts = []
+    for i in range(x.shape[0]):
+        pts.append((-x[i], y[i], z[i]))
+        pts.append((x[i], y[i], z[i]))
+    return pts
 
 
 
@@ -240,6 +234,7 @@ def prune(lstring, simulation_config):
                 branch.info.cut = True
 
                 # Remove the branch from the L-System string
+                print("Pruning branch at position:", position, lstring[position])  # Debug statement
                 lstring = cut_from(position, lstring)
 
                 return True

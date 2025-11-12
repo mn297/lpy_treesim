@@ -84,6 +84,7 @@ class BasicWoodConfig:
     order: int = 0
     color: int = 0
     material: int = 0
+    prunable: bool = True
     name: str = None
     bud_spacing_age: int = 2  # Age interval for bud creation
     
@@ -123,6 +124,7 @@ class BasicWood(ABC):
       order = config.order
       color = config.color
       material = config.material
+      prunable = config.prunable
       name = config.name
       bud_spacing_age = config.bud_spacing_age
       curve_x_range = config.curve_x_range
@@ -140,7 +142,7 @@ class BasicWood(ABC):
     self.tying = TyingState(tie_axis=tie_axis)
     self.current_tied = False
     #Information Variables
-    self.info = InfoState(order=order, color=color, material=material)
+    self.info = InfoState(order=order, color=color, material=material, prunable=prunable)
     self.__length = 0
     #Growth Variables
     self.growth = GrowthState(
