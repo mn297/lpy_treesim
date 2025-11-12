@@ -36,7 +36,7 @@ class UFOSimulationConfig:
     
     # Growth Parameters
     thickness_multiplier: float = 1.2  # Multiplier for internode thickness
-    bud_age_tolerance: float = 0.01  # Tolerance for age-based bud spacing
+    tolerance: float = 1e-6  # Tolerance for age-based bud spacing
     
     # Visualization Parameters
     attractor_point_width: int = 10  # Width of attractor points in visualization

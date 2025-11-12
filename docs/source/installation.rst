@@ -1,45 +1,65 @@
 Installation
 ==============
 
+This document provides instructions on how to install `lpy_treesim` and its dependencies.
+
+Prerequisites
+-------------
+
+- **Python 3.x**: Make sure you have a working Python 3 installation.
+- **Conda**: `lpy_treesim` relies on the Conda package manager to handle its environment and dependencies. If you don't have Conda, you can install it by following the official documentation: https://docs.conda.io/projects/conda/en/latest/user-guide/install/
+
 Installing L-Py
-***************
+---------------
 
-``L-Py`` distribution is based on the ``conda`` software environment management system.
-To install conda, you may refer to its installation page: https://docs.conda.io/projects/conda/en/latest/user-guide/install/
+`lpy_treesim` is built on top of L-Py, a Python-based L-system simulator. To install L-Py, follow these steps:
 
+1.  **Create a Conda Environment**: Open your terminal and create a new Conda environment named `lpy`:
 
-Installing binaries using conda
-
-
-
-To install L-Py, you need to create an environment (named lpy in this case) :
-
-.. code-block:: bash
+    .. code-block:: bash
 
         conda create -n lpy openalea.lpy -c fredboudon -c conda-forge
 
-The package is retrieved from the ``fredboudon`` channel (developement) and its dependencies will be taken from ``conda-forge`` channel.
+2.  **Activate the Environment**: Activate the newly created environment:
 
-Then, you need to activate the L-Py environment
-
-.. code-block:: bash
+    .. code-block:: bash
 
         conda activate lpy
 
-And then run L-Py
+3.  **Run L-Py**: You can now run L-Py to ensure it's installed correctly:
 
-.. code-block:: bash
+    .. code-block:: bash
 
         lpy
 
-For any issues with L-py, please check the documentation of L-Py provided here https://lpy.readthedocs.io/en/latest/user/installing.html
+For more detailed information and troubleshooting, refer to the official L-Py documentation: https://lpy.readthedocs.io/en/latest/user/installing.html
 
+Installing `lpy_treesim`
+------------------------
 
-Installing TreeSim_Lpy
-***********************
+Once you have L-Py set up, you can install `lpy_treesim`:
 
-With the conda environment for L-Py set, next we need to clone the TreeSim_Lpy repository. To do that run
+1.  **Clone the Repository**: Clone this repository to your local machine:
+
+    .. code-block:: bash
+
+        git clone https://github.com/your-username/lpy_treesim.git
+        cd lpy_treesim
+
+2.  **Install Dependencies**: The required Python packages are listed in the `requirements.txt` file. You can install them using pip:
+
+    .. code-block:: bash
+
+        pip install -r requirements.txt
+
+Running the Examples
+--------------------
+
+The `examples` directory contains several examples that demonstrate how to use `lpy_treesim`. To run an example, navigate to the `examples` directory and run the desired script:
 
 .. code-block:: bash
 
-        git clone https://github.com/OSUrobotics/treesim_lpy.git
+    cd examples
+    python example_script.py
+
+Replace `example_script.py` with the actual name of the example you want to run.

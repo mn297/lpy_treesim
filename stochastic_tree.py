@@ -176,6 +176,16 @@ class BasicWood(ABC):
     # if prob_break > self.bud_break_prob:
     #   return True
     # return False
+
+  @abstractmethod
+  def pre_bud_rule(self) -> str:
+    """This method can define any internal changes happening to the properties of the class, such as reduction in thickness increment etc."""
+    pass
+  
+  @abstractmethod
+  def post_bud_rule(self) -> str:
+    """This method can define any internal changes happening to the properties of the class, such as reduction in thickness increment etc."""
+    pass
   
   @abstractmethod
   def grow(self) -> None:
@@ -376,6 +386,8 @@ class BasicWood(ABC):
     parallel_component = np.dot(vec_a, vec_b_unit) * vec_b_unit
     perpendicular_component = vec_a - parallel_component
     return parallel_component, perpendicular_component
+  
+
   
 
 

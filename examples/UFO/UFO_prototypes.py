@@ -5,7 +5,9 @@ import numpy as np
 import random as rd
 from dataclasses import dataclass
 import copy
+from openalea.lpy import newmodule
 from helper import *
+from openalea.lpy import Lsystem, AxialTree, newmodule
 class Spur(TreeBranch):
   def __init__(self, config=None, copy_from=None, prototype_dict: dict = {}):
     super().__init__(config, copy_from, prototype_dict)
@@ -17,6 +19,16 @@ class Spur(TreeBranch):
     
   def create_branch(self):
     return None
+  
+  def pre_bud_rule(self, plant_segment, simulation_config):
+    return None
+  
+  def post_bud_rule(self, plant_segment, simulation_config):
+      radius = plant_segment.growth.thickness * simulation_config.thickness_multiplier
+      # return L-Py module directly
+      # from openalea.lpy import newModule
+      return [('@O', [float(radius)])]
+
     
    
 class TertiaryBranch(TreeBranch):
@@ -36,6 +48,12 @@ class TertiaryBranch(TreeBranch):
       else:
         new_ob = Spur(copy_from = self.prototype_dict['spur'])
       return new_ob  
+  
+  def pre_bud_rule(self, plant_segment, simulation_config):
+    return None
+
+  def post_bud_rule(self, plant_segment, simulation_config):
+    return None
     
 class Branch(TreeBranch):
   def __init__(self, config=None, copy_from=None, prototype_dict: dict = {}):
@@ -57,6 +75,12 @@ class Branch(TreeBranch):
     except:
       return None
     return new_ob  
+  
+  def pre_bud_rule(self, plant_segment, simulation_config):
+    return None
+
+  def post_bud_rule(self, plant_segment, simulation_config):
+    return None
  
     
 class Trunk(TreeBranch):
@@ -75,6 +99,12 @@ class Trunk(TreeBranch):
   def create_branch(self):
     if rd.random() > 0.1:
       return Branch(copy_from = self.prototype_dict['branch'])
+    
+  def pre_bud_rule(self, plant_segment, simulation_config):
+    return None
+
+  def post_bud_rule(self, plant_segment, simulation_config ):
+    return None
                
 
 

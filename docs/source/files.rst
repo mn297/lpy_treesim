@@ -1,17 +1,51 @@
-=========
-Files
-=========
+Files and Directory Structure
+=============================
 
-This page gives a brief info of all the files provided in treesim_lpy repository 
+This document provides an overview of the important files and directories in the `lpy_treesim` project.
 
-* examples/*
-    * examples/static_envy.lpy - Grows a tree in the envy architecture following predefined rules. No thinning and/or tying takes place.
-    * examples/static_ufo.lpy - Grows a tree in the ufo architecture following predefined rules. No thinning and/or tying takes place.
-    * examples/UFO_tie_prune_label.lpy - This file allows the growth of a tree in ufo architecture following the given thinning and tying rules. Further has the option to label different segments as well
-    * examples/Envy_tie_prune_label.lpy - This file allows the growth of a tree in ufo architecture following the given thinning and tying rules. Further has the option to label different segments as well
+Top-Level Files
+---------------
 
-* modules_test/*
-    * All files in this folder use classes/functions defined in stochastic_tree.py. They can be a good example on how to use the BasicWood, Wire and Support classes
+- **`README.rst`**: The main README file for the project.
+- **`helper.py`**: Contains helper functions used by other scripts in the project.
+- **`stochastic_tree.py`**: The core module for generating stochastic trees.
+- **`.gitignore`**: A file that specifies which files and directories to ignore in a Git repository.
 
-* other_files/*
-    * These files may or may not work. These were used in previous iterations of treesim_lpy. Kept to be used as a reference.
+`docs/`
+-------
+
+This directory contains the documentation for the project.
+
+- **`Makefile`**: A makefile with commands to build the documentation.
+- **`source/`**: The source files for the documentation, written in reStructuredText.
+    - **`conf.py`**: The configuration file for Sphinx, the documentation generator.
+    - **`index.rst`**: The main entry point for the documentation.
+    - **`installation.rst`**: Instructions on how to install the project.
+    - **`usage.rst`**: An explanation of how to use the project.
+    - **`files.rst`**: An overview of the important files and directories in the project.
+    - **`resources.rst`**: A list of resources related to the project.
+    - **`methods.rst`**: A description of the methods used in the project.
+- **`_static/`**: Static files, such as images and videos, that are used in the documentation.
+
+`examples/`
+-----------
+
+This directory contains example `.lpy` files that demonstrate how to use `lpy_treesim`.
+
+- **`legacy/`**: Older example files.
+- **`UFO/`**: Examples related to the UFO cherry tree architecture.
+
+`modules_test/`
+---------------
+
+This directory contains test files for the modules in the project. The files in this folder use classes and functions defined in `stochastic_tree.py` and can be a good example of how to use the `BasicWood`, `Wire`, and `Support` classes.
+
+`other_files/`
+--------------
+
+These files may or may not work. They were used in previous iterations of `lpy_treesim` and are kept for reference.
+
+`tree_generation/`
+------------------
+
+This directory contains scripts for generating and converting tree models.

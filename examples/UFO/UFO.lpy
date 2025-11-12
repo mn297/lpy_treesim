@@ -11,7 +11,7 @@ import random as rd
 from examples.UFO.UFO_prototypes import basicwood_prototypes, Trunk
 from examples.UFO.UFO_simulation import UFOSimulationConfig, generate_points_ufo, get_energy_mat, decide_guide, tie, prune
 from dataclasses import dataclass
-
+import time
 
 #init  
 main_trunk = Trunk(copy_from = basicwood_prototypes['trunk'])
@@ -188,21 +188,29 @@ grow_object(plant_segment) :
   else:
     # Continue growing - update segment properties
     nproduce SetContour(plant_segment.contour)
+    #Update internal state of the plant segment
     plant_segment.grow_one()
+    #Update physical representation
     if enable_color_labeling:
-      # Add color visualization if labeling is enabled
+      # Add color visualization if labeling is enabled -- Can this be moved to the start of building the segment?
       r, g, b = plant_segment.info.color
       nproduce SetColor(r,g,b)
-    if 'Spur' in plant_segment.name:
-      # Spur branches: produce short shoots with terminal buds
-      produce I(plant_segment.growth.growth_length, plant_segment.growth.thickness, plant_segment)bud(ParameterSet(type = plant_segment, num_buds = 0))@O(plant_segment.growth.thickness*simulation_config.thickness_multiplier)grow_object(plant_segment)
-    else:
-      # Regular branches: produce internode segment
-      nproduce I(plant_segment.growth.growth_length, plant_segment.growth.thickness, plant_segment)
-      if np.isclose(plant_segment.info.age % plant_segment.bud_spacing_age, 0, atol=simulation_config.bud_age_tolerance):
+    #Produce internode segment
+    nproduce I(plant_segment.growth.growth_length, plant_segment.growth.thickness, plant_segment)
+    #Produce bud
+    if plant_segment.pre_bud_rule(plant_segment, simulation_config):
+      for module in plant_segment.post_bud_rule(plant_segment, simulation_config):
+              nproduce new(module[0], *module[1])
+
+      if should_bud(plant_segment, simulation_config):
           # Age-based bud production for lateral branching
           nproduce bud(ParameterSet(type = plant_segment, num_buds = 0))
-      produce grow_object(plant_segment)
+          
+          if plant_segment.post_bud_rule(plant_segment, simulation_config):
+            for module in plant_segment.post_bud_rule(plant_segment, simulation_config):
+              nproduce new(module[0], *module[1])
+    
+    produce grow_object(plant_segment)
 
 # BUD PRODUCTION RULE
 # Controls bud break and branch initiation
@@ -223,12 +231,11 @@ bud(bud_parameters) :
 
    if hasattr(new_branch, 'curve_x_range'):
      # Curved branches: set up custom growth guide curve
-     import time
      curve = create_bezier_curve(x_range=new_branch.curve_x_range, y_range=new_branch.curve_y_range, z_range=new_branch.curve_z_range, seed_value=time.time())
      nproduce[@GcSetGuide(curve, new_branch.growth.max_length)
    else:
      # Straight branches: use default orientation
-     nproduce [
+     nproduce [@Gc
    # Produce new branch with random orientation and growth object
    nproduce @RGetPos(new_branch.location.start)WoodStart(ParameterSet(type = new_branch))/(rd.random()*360)&(rd.random()*360)grow_object(new_branch)GetPos(new_branch.location.end)@Ge]bud(bud_parameters)
 

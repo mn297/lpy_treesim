@@ -232,4 +232,7 @@ def create_bezier_curve(num_control_points=6, x_range=(-2, 2), y_range=(-2, 2), 
     return BezierCurve(control_point_array)
 
 
- 
+def should_bud(plant_segment, simulation_config):
+    """Determine if a plant segment should produce a bud"""
+    return np.isclose(plant_segment.info.age % plant_segment.bud_spacing_age, 0, 
+                        atol=simulation_config.tolerance)
