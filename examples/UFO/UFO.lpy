@@ -202,13 +202,13 @@ grow_object(plant_segment) :
       for module in plant_segment.post_bud_rule(plant_segment, simulation_config):
               nproduce new(module[0], *module[1])
 
-      if should_bud(plant_segment, simulation_config):
-          # Age-based bud production for lateral branching
-          nproduce bud(ParameterSet(type = plant_segment, num_buds = 0))
-          
-          if plant_segment.post_bud_rule(plant_segment, simulation_config):
-            for module in plant_segment.post_bud_rule(plant_segment, simulation_config):
-              nproduce new(module[0], *module[1])
+    if should_bud(plant_segment, simulation_config):
+        # Age-based bud production for lateral branching
+        nproduce bud(ParameterSet(type = plant_segment, num_buds = 0))
+        
+        if plant_segment.post_bud_rule(plant_segment, simulation_config):
+          for module in plant_segment.post_bud_rule(plant_segment, simulation_config):
+            nproduce new(module[0], *module[1])
     
     produce grow_object(plant_segment)
 

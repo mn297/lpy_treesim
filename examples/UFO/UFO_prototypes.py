@@ -120,7 +120,7 @@ spur_config = BasicWoodConfig(
     growth_length=0.05, 
     thickness_increment=0., 
     color=[0, 255, 0],
-    bud_spacing_age=2,  # Spurs bud every 1 age unit
+    bud_spacing_age=1,  # Spurs bud every 1 age unit
     curve_x_range=(-0.2, 0.2),  # Tighter bounds for spur curves
     curve_y_range=(-0.2, 0.2),  # Tighter bounds for spur curves
     curve_z_range=(-1, 1)       # Same Z range
@@ -151,7 +151,8 @@ trunk_config = BasicWoodConfig(
     bud_spacing_age=2,  # Trunk buds every 4 age units
     curve_x_range=(-0.3, 0.3),  # Conservative bounds for trunk
     curve_y_range=(-0.3, 0.3),  # Conservative bounds for trunk
-    curve_z_range=(-0.5, 0.5)   # Tighter Z range for trunk
+    curve_z_range=(-0.5, 0.5),   # Tighter Z range for trunk
+    prunable=False
 )
 
 branch_config = BasicWoodConfig(
