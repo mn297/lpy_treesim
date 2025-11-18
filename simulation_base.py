@@ -305,7 +305,6 @@ class TreeSimulationBase(ABC):
                 if branch.tying.guide_points:
                     # Perform the tying operation
                     branch.tying.tie_updated = False
-                    branch.tying.guide_target.add_branch()
                     
                     # Update the L-System string with tying modifications
                     lstring, modifications_count = branch.tie_lstring(lstring, position)

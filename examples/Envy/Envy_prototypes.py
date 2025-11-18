@@ -14,7 +14,9 @@ class Spur(TreeBranch):
         super().__init__(config, copy_from, prototype_dict)
 
     def is_bud_break(self, num_buds_segment):
-        return (rd.random() < 0.1)
+        if num_buds_segment >= self.growth.max_buds_segment:
+            return False
+        return (rd.random() < 0.1 * (1 - num_buds_segment / self.growth.max_buds_segment))
 
     def create_branch(self):
         return None
@@ -29,15 +31,13 @@ class Spur(TreeBranch):
 class Branch(TreeBranch):
     def __init__(self, config=None, copy_from=None, prototype_dict: dict = {}):
         super().__init__(config, copy_from, prototype_dict)
-        self.num_buds_segment = 0
 
     def is_bud_break(self, num_break_buds):
-        if num_break_buds >= 1:
+        if num_break_buds >= self.growth.max_buds_segment:
             return False
-        return (rd.random() < 0.5*(1 - self.num_buds_segment/self.growth.max_buds_segment))
+        return (rd.random() < 0.5 * (1 - num_break_buds / self.growth.max_buds_segment))
 
     def create_branch(self):
-        self.num_buds_segment += 1
         if rd.random() > 0.8:
             new_ob = NonTrunk(copy_from=self.prototype_dict['nontrunk'])
         else:
@@ -57,7 +57,9 @@ class Trunk(TreeBranch):
         super().__init__(config, copy_from, prototype_dict)
 
     def is_bud_break(self, num_buds_segment):
-        if (rd.random() > 0.1*(1 - num_buds_segment/self.growth.max_buds_segment)):
+        if num_buds_segment >= self.growth.max_buds_segment:
+            return False
+        if (rd.random() > 0.1 * (1 - num_buds_segment / self.growth.max_buds_segment)):
             return False
         return True
 
@@ -79,7 +81,9 @@ class NonTrunk(TreeBranch):
         super().__init__(config, copy_from, prototype_dict)
 
     def is_bud_break(self, num_buds_segment):
-        return (rd.random() < 0.5*(1 - num_buds_segment/self.growth.max_buds_segment))
+        if num_buds_segment >= self.growth.max_buds_segment:
+            return False
+        return (rd.random() < 0.5 * (1 - num_buds_segment / self.growth.max_buds_segment))
 
     def create_branch(self):
         if rd.random() > 0.3:
@@ -104,7 +108,8 @@ spur_config = BasicWoodConfig(
     tie_axis=None,
     max_length=0.2,
     thickness=0.003,
-    growth_length=0.05,  # growth_length/2 from original
+    growth_length=0.05,
+    cylinder_length=0.05,
     thickness_increment=0.,
     color=[0, 255, 0],
     bud_spacing_age=2,
@@ -115,11 +120,12 @@ spur_config = BasicWoodConfig(
 )
 
 branch_config = BasicWoodConfig(
-    max_buds_segment=30,
+    max_buds_segment=2,
     tie_axis=(1, 0, 0),
     max_length=2.2,
     thickness=0.01,
     growth_length=0.1,
+    cylinder_length=0.05,
     thickness_increment=0.00001,
     color=[255, 150, 0],
     bud_spacing_age=2,
@@ -135,6 +141,7 @@ trunk_config = BasicWoodConfig(
     max_length=4,
     thickness=0.01,
     growth_length=0.1,
+    cylinder_length=0.05,
     thickness_increment=0.00001,
     color=[255, 0, 0],
     bud_spacing_age=2,
@@ -149,7 +156,8 @@ nontrunk_config = BasicWoodConfig(
     tie_axis=None,
     max_length=0.3,
     thickness=0.003,
-    growth_length=0.05,  # growth_length/2 from original
+    growth_length=0.05,
+    cylinder_length=0.05,
     thickness_increment=0.00001,
     color=[0, 255, 0],
     bud_spacing_age=2,

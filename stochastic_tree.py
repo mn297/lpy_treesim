@@ -48,10 +48,11 @@ class TyingState:
 @dataclass
 class GrowthState:
     """Growth parameters for a wood object."""
-    max_buds_segment: int = 5
+    max_buds_segment: int = 5  # Total cumulative buds allowed across the entire branch segment (not per node)
     thickness: float = 0.1
     thickness_increment: float = 0.01
     growth_length: float = 1.0
+    cylinder_length: float = 0.1
     max_length: float = 7.0
 
 @dataclass
@@ -75,10 +76,11 @@ class InfoState:
 class BasicWoodConfig:
     """Configuration parameters for BasicWood initialization."""
     copy_from: any = None
-    max_buds_segment: int = 5
+    max_buds_segment: int = 5  # Total cumulative buds allowed across the entire branch segment (not per node)
     thickness: float = 0.1
     thickness_increment: float = 0.01
     growth_length: float = 1.0
+    cylinder_length: float = 0.1  # Length of each individual cylinder
     max_length: float = 7.0
     tie_axis: tuple = None
     order: int = 0
@@ -130,6 +132,7 @@ class BasicWood(ABC):
       curve_x_range = config.curve_x_range
       curve_y_range = config.curve_y_range
       curve_z_range = config.curve_z_range
+      cylinder_length = config.cylinder_length
     elif copy_from is None:
       raise ValueError("config must be provided when copy_from is None")
     
@@ -150,6 +153,7 @@ class BasicWood(ABC):
         thickness=thickness,
         thickness_increment=thickness_increment,
         growth_length=growth_length,
+        cylinder_length=cylinder_length,
         max_length=max_length
     )
     # Bud spacing for L-System rules

@@ -115,11 +115,11 @@ def EndEach(lstring):
         while tie(lstring, simulation_config):
             pass  # Continue until no more tying operations are possible
 
-        # Check if this is also a pruning iteration
-        if current_iteration % pruning_interval_iterations == 0:
-            # Prune branches until no more can be pruned
-            while prune(lstring, simulation_config):
-                pass
+    # Check if this is also a pruning iteration
+    if current_iteration % pruning_interval_iterations == 0:
+        # Prune branches until no more can be pruned
+        while prune(lstring, simulation_config):
+            pass
 
     return lstring
 
@@ -195,9 +195,12 @@ grow_object(plant_segment) :
       # Add color visualization if labeling is enabled -- Can this be moved to the start of building the segment?
       r, g, b = plant_segment.info.color
       nproduce SetColor(r,g,b)
-    #Produce internode segment
-    nproduce I(plant_segment.growth.growth_length, plant_segment.growth.thickness, plant_segment)
-    #Produce bud
+    #Produce internode segments (n cylinders per growth step)
+    n_cylinders = int(plant_segment.growth.growth_length / plant_segment.growth.cylinder_length)
+    for i in range(n_cylinders):
+      nproduce I(plant_segment.growth.cylinder_length, plant_segment.growth.thickness, plant_segment)
+    
+    #Produce bud (after all cylinders in this growth step)
     if plant_segment.pre_bud_rule(plant_segment, simulation_config):
       for module in plant_segment.post_bud_rule(plant_segment, simulation_config):
               nproduce new(module[0], *module[1])

@@ -15,7 +15,7 @@ class Spur(TreeBranch):
   def is_bud_break(self, num_buds_segment):
     if num_buds_segment >= self.growth.max_buds_segment:
       return False
-    return (rd.random() < 0.1)
+    return (rd.random() < 0.1 * (1 - num_buds_segment / self.growth.max_buds_segment))
     
   def create_branch(self):
     return None
@@ -36,10 +36,9 @@ class TertiaryBranch(TreeBranch):
     super().__init__(config, copy_from, prototype_dict)
 
   def is_bud_break(self, num_buds_segment):
-    if num_buds_segment >= 2:
+    if num_buds_segment >= self.growth.max_buds_segment:
       return False
-    if (rd.random() < 0.005*self.growth.growth_length*(1 - self.num_buds/self.growth.max_buds_segment)):
-      self.num_buds +=1
+    if (rd.random() < 0.005*self.growth.growth_length * (1 - num_buds_segment / self.growth.max_buds_segment)):
       return True  
       
   def create_branch(self):
@@ -60,9 +59,9 @@ class Branch(TreeBranch):
     super().__init__(config, copy_from, prototype_dict)
 
   def is_bud_break(self, num_buds_segment):
-      if num_buds_segment >= 2:
+      if num_buds_segment >= self.growth.max_buds_segment:
         return False
-      if (rd.random() < 0.2*(1 - self.num_buds/self.growth.max_buds_segment)):
+      if (rd.random() < 0.2 * (1 - num_buds_segment / self.growth.max_buds_segment)):
 
         return True  
       
@@ -91,9 +90,8 @@ class Trunk(TreeBranch):
   def is_bud_break(self, num_buds_segment):
     if num_buds_segment >= self.growth.max_buds_segment:
       return False
-    if (rd.random() > 0.05*self.length/self.growth.max_length*(1 - self.num_buds/self.growth.max_buds_segment)):
+    if (rd.random() > 0.05*self.length/self.growth.max_length * (1 - num_buds_segment / self.growth.max_buds_segment)):
       return False
-    self.num_buds+=1
     return True
     
   def create_branch(self):
@@ -113,12 +111,13 @@ basicwood_prototypes = {}
 
 # Create configs for cleaner prototype setup
 spur_config = BasicWoodConfig(
-    max_buds_segment=5,
+    max_buds_segment=2,
     tie_axis=None, 
     max_length=0.1, 
     thickness=0.003, 
-    growth_length=0.05, 
-    thickness_increment=0., 
+    growth_length=0.05,
+    cylinder_length=0.01,
+    thickness_increment=0.,
     color=[0, 255, 0],
     bud_spacing_age=1,  # Spurs bud every 1 age unit
     curve_x_range=(-0.2, 0.2),  # Tighter bounds for spur curves
@@ -127,12 +126,13 @@ spur_config = BasicWoodConfig(
 )
 
 side_branch_config = BasicWoodConfig(
-    max_buds_segment=40,
+    max_buds_segment=2,
     tie_axis=None, 
     max_length=0.25, 
     thickness=0.003, 
-    growth_length=0.05, 
-    thickness_increment=0.00001, 
+    growth_length=0.05,
+    cylinder_length=0.01,
+    thickness_increment=0.00001,
     color=[0, 255, 0],
     bud_spacing_age=2,  # Tertiary branches bud every 3 age units
     curve_x_range=(-0.5, 0.5),  # Moderate bounds for tertiary branches
@@ -141,12 +141,13 @@ side_branch_config = BasicWoodConfig(
 )
 
 trunk_config = BasicWoodConfig(
-    max_buds_segment=60,
+    max_buds_segment=5,
     tie_axis=(1, 0, 0), 
     max_length=3, 
     thickness=0.02, 
     thickness_increment=0.00001, 
-    growth_length=0.1, 
+    growth_length=0.1,
+    cylinder_length=0.02,
     color=[255, 0, 0],
     bud_spacing_age=2,  # Trunk buds every 4 age units
     curve_x_range=(-0.3, 0.3),  # Conservative bounds for trunk
@@ -156,12 +157,13 @@ trunk_config = BasicWoodConfig(
 )
 
 branch_config = BasicWoodConfig(
-    max_buds_segment=140,
+    max_buds_segment=2,
     tie_axis=(0, 0, 1), 
     max_length=2.5, 
     thickness=0.01, 
     thickness_increment=0.00001, 
-    growth_length=0.1, 
+    growth_length=0.1,
+    cylinder_length=0.02,
     color=[255, 150, 0],
     bud_spacing_age=2,  # Branches bud every 2 age units
     curve_x_range=(-0.4, 0.4),  # Moderate bounds for primary branches
