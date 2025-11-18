@@ -19,6 +19,8 @@ from openalea.lpy import Lsystem, newmodule
 from random import uniform, seed
 from numpy import linspace, pi, sin, cos
 import numpy as np
+from typing import Callable, Dict, Iterable
+import importlib
 
 
 def cut_from(pruning_position, lstring, lsystem_path=None):
@@ -236,3 +238,66 @@ def should_bud(plant_segment, simulation_config):
     """Determine if a plant segment should produce a bud"""
     return np.isclose(plant_segment.info.age % plant_segment.bud_spacing_age, 0, 
                         atol=simulation_config.tolerance)
+
+
+def start_each_common(
+    lstring,
+    branch_hierarchy: Dict[str, Iterable],
+    trellis_support,
+    main_trunk,
+):
+    """Shared pre-iteration tying preparation logic."""
+    del lstring  # unused in shared logic; kept for L-Py parity
+
+    if trellis_support.trunk_wire and not main_trunk.tying.tie_updated:
+        main_trunk.tie_update()
+
+    for branch in branch_hierarchy[main_trunk.name]:
+        if not branch.tying.tie_updated:
+            branch.tie_update()
+
+
+def end_each_common(
+    lstring,
+    branch_hierarchy: Dict[str, Iterable],
+    trellis_support,
+    tying_interval_iterations: int,
+    pruning_interval_iterations: int,
+    simulation_config,
+    main_trunk,
+    get_iteration_number: Callable[[], int],
+    get_energy_matrix,
+    decide_guide_fn,
+    tie_fn,
+    prune_fn,
+):
+    """Shared post-iteration tying and pruning orchestration."""
+    current_iteration = get_iteration_number() + 1
+
+    if current_iteration % tying_interval_iterations == 0:
+        if trellis_support.trunk_wire:
+            main_trunk.update_guide(main_trunk.tying.guide_target)
+
+        branches = branch_hierarchy[main_trunk.name]
+        energy_matrix = get_energy_matrix(branches, trellis_support, simulation_config)
+
+        decide_guide_fn(energy_matrix, branches, trellis_support, simulation_config)
+
+        for branch in branches:
+            branch.update_guide(branch.tying.guide_target)
+
+        while tie_fn(lstring, simulation_config):
+            pass
+
+    if current_iteration % pruning_interval_iterations == 0:
+        while prune_fn(lstring, simulation_config):
+            pass
+
+    return lstring
+
+
+def resolve_attr(path: str):
+    """Import a fully qualified attribute path."""
+    pkg_path, attr_name = path.rsplit('.', 1)
+    pkg = importlib.import_module(pkg_path)
+    return getattr(pkg, attr_name)
