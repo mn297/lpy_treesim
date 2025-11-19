@@ -25,8 +25,9 @@ class EnvySimulationConfig(SimulationConfig):
     trellis_z_spacing: float = 0.45
 
     # Envy-specific Growth Parameters
-    growth_length: float = 0.1
-    bud_spacing_age: int = 2
+    semantic_label: bool = True
+    instance_label: bool = False
+    per_cylinder_label: bool = False
 
 
 class EnvySimulation(TreeSimulationBase):
@@ -59,32 +60,5 @@ class EnvySimulation(TreeSimulationBase):
             pts.append((-x[i], y[i], z[i]))
             pts.append((x[i], y[i], z[i]))
         return pts
-
-
-# Backwards compatibility: provide standalone functions that use the class
-def generate_points_v_trellis(simulation_config):
-    """Backward compatibility wrapper for generate_points."""
-    sim = EnvySimulation(simulation_config)
-    return sim.generate_points()
-
-def get_energy_mat(branches, arch, simulation_config):
-    """Backward compatibility wrapper for get_energy_mat."""
-    sim = EnvySimulation(simulation_config)
-    return sim.get_energy_mat(branches, arch)
-
-def decide_guide(energy_matrix, branches, arch, simulation_config):
-    """Backward compatibility wrapper for decide_guide."""
-    sim = EnvySimulation(simulation_config)
-    return sim.decide_guide(energy_matrix, branches, arch)
-
-def prune(lstring, simulation_config):
-    """Backward compatibility wrapper for prune."""
-    sim = EnvySimulation(simulation_config)
-    return sim.prune(lstring)
-
-def tie(lstring, simulation_config):
-    """Backward compatibility wrapper for tie."""
-    sim = EnvySimulation(simulation_config)
-    return sim.tie(lstring)
 
     

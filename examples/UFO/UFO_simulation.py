@@ -26,6 +26,9 @@ class UFOSimulationConfig(SimulationConfig):
     
     # UFO-specific Growth Parameters
     thickness_multiplier: float = 1.2  # Multiplier for internode thickness
+    semantic_label: bool = True
+    instance_label: bool = False
+    per_cylinder_label: bool = False
 
 
 class UFOSimulation(TreeSimulationBase):
@@ -61,31 +64,3 @@ class UFOSimulation(TreeSimulationBase):
             wire_attachment_points.append((x[point_index], y[point_index], z[point_index]))
         
         return wire_attachment_points
-
-
-# Backwards compatibility: provide standalone functions that use the class
-# Backwards compatibility: provide standalone functions that use the class
-def generate_points_ufo(simulation_config):
-    """Backward compatibility wrapper for generate_points."""
-    sim = UFOSimulation(simulation_config)
-    return sim.generate_points()
-
-def get_energy_mat(branches, arch, simulation_config):
-    """Backward compatibility wrapper for get_energy_mat."""
-    sim = UFOSimulation(simulation_config)
-    return sim.get_energy_mat(branches, arch)
-
-def decide_guide(energy_matrix, branches, arch, simulation_config):
-    """Backward compatibility wrapper for decide_guide."""
-    sim = UFOSimulation(simulation_config)
-    return sim.decide_guide(energy_matrix, branches, arch)
-
-def prune(lstring, simulation_config):
-    """Backward compatibility wrapper for prune."""
-    sim = UFOSimulation(simulation_config)
-    return sim.prune(lstring)
-
-def tie(lstring, simulation_config):
-    """Backward compatibility wrapper for tie."""
-    sim = UFOSimulation(simulation_config)
-    return sim.tie(lstring)

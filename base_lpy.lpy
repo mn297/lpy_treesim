@@ -23,35 +23,27 @@ from dataclasses import dataclass
 # Override these externs via Lsystem(..., variables) to point at a specific
 # architecture without editing this shared file.
 extern(
+    color_manager = None,
     prototype_dict_path = "examples.Envy.Envy_prototypes.basicwood_prototypes",
     trunk_class_path = "examples.Envy.Envy_prototypes.Trunk",
     simulation_config_class_path = "examples.Envy.Envy_simulation.EnvySimulationConfig",
-    point_generator_path = "examples.Envy.Envy_simulation.generate_points_v_trellis",
-    energy_function_path = "examples.Envy.Envy_simulation.get_energy_mat",
-    decide_function_path = "examples.Envy.Envy_simulation.decide_guide",
-    tie_function_path = "examples.Envy.Envy_simulation.tie",
-    prune_function_path = "examples.Envy.Envy_simulation.prune",
+    simulation_class_path = "examples.Envy.Envy_simulation.EnvySimulation",
     axiom_pitch = 0.0,
     axiom_yaw = 0.0,
-)
-
-# Resolve extern-provided dotted paths so the rest of the script can operate on
+)# Resolve extern-provided dotted paths so the rest of the script can operate on
 # concrete classes/functions exactly like the Envy/UFO drivers do.
 basicwood_prototypes = resolve_attr(prototype_dict_path)
 Trunk = resolve_attr(trunk_class_path)
 SimulationConfigClass = resolve_attr(simulation_config_class_path)
-point_generator_fn = resolve_attr(point_generator_path)
-get_energy_mat = resolve_attr(energy_function_path)
-decide_guide = resolve_attr(decide_function_path)
-tie = resolve_attr(tie_function_path)
-prune = resolve_attr(prune_function_path)
+SimulationClass = resolve_attr(simulation_class_path)
 
 simulation_config = SimulationConfigClass()
+simulation = SimulationClass(simulation_config)
 main_trunk = Trunk(copy_from = basicwood_prototypes['trunk'])
 
 # Build trellis geometry and cadence numbers up front so callbacks stay simple.
 trellis_support = Support(
-    point_generator_fn(simulation_config),
+  simulation.generate_points(),
     simulation_config.support_num_wires,
     simulation_config.support_spacing_wires,
     simulation_config.support_trunk_wire_point,
@@ -62,7 +54,30 @@ main_trunk.tying.guide_target = trellis_support.trunk_wire
 
 # Track parent/child relationships for tying/pruning decisions.
 branch_hierarchy = {main_trunk.name: []}
-enable_color_labeling = simulation_config.label
+enable_semantic_labeling = simulation_config.semantic_label
+enable_instance_labeling = simulation_config.instance_label
+enable_per_cylinder_labeling = simulation_config.per_cylinder_label
+
+if (enable_instance_labeling or enable_per_cylinder_labeling) and color_manager is None:
+  raise ValueError(
+    "Instance labeling is enabled but no color_manager extern was provided."
+  )
+
+
+def _get_energy_mat(branches, arch, _config):
+  return simulation.get_energy_mat(branches, arch)
+
+
+def _decide_guide(energy_matrix, branches, arch, _config):
+  return simulation.decide_guide(energy_matrix, branches, arch)
+
+
+def _tie(lstring, _config):
+  return simulation.tie(lstring)
+
+
+def _prune(lstring, _config):
+  return simulation.prune(lstring)
 
 # L-Py callbacks delegate to the Python helpers so architectures share logic.
 def StartEach(lstring):
@@ -81,12 +96,12 @@ def EndEach(lstring):
         simulation_config,
         main_trunk,
         getIterationNb,
-        get_energy_mat,
-        decide_guide,
-        tie,
-        prune,
+        _get_energy_mat,
+        _decide_guide,
+        _tie,
+        _prune,
     )
-
+generalized_cylinder = getattr(simulation_config, "use_generalized_cylinder", False)
 # =============================================================================
 # L-SYSTEM GRAMMAR DEFINITION
 # =============================================================================
@@ -149,18 +164,28 @@ grow_object(plant_segment) :
     #Update internal state of the plant segment
     plant_segment.grow_one()
     #Update physical representation
-    if enable_color_labeling:
+    if enable_semantic_labeling:
       # Add color visualization if labeling is enabled -- Can this be moved to the start of building the segment?
       r, g, b = plant_segment.info.color
+      plant_part = plant_segment.name.split("_")[0] # Get the part type (e.g., "trunk", "branch")
+      color_manager.set_unique_color((r,g,b), plant_part)  # Ensure part type has a color assig
       nproduce SetColor(r,g,b)
+    if enable_instance_labeling:
+        # Instance-level labeling (unique color per branch instance)
+      r, g, b = color_manager.get_unique_color(plant_segment.name)
+      nproduce SetColor(r,g,b)
+
     #Produce internode segments (n cylinders per growth step)
     n_cylinders = int(plant_segment.growth.growth_length / plant_segment.growth.cylinder_length)
     for i in range(n_cylinders):
+      if enable_per_cylinder_labeling:
+        r, g, b = color_manager.get_unique_color(plant_segment.name, if_exists=False)
+        nproduce SetColor(r,g,b)  
       nproduce I(plant_segment.growth.cylinder_length, plant_segment.growth.thickness, plant_segment)
     #Produce bud (after all cylinders in this growth step)
     if plant_segment.pre_bud_rule(plant_segment, simulation_config):
       for generated in plant_segment.post_bud_rule(plant_segment, simulation_config):
-              nproduce new(generated[0], *generated[1])
+        nproduce new(generated[0], *generated[1])
 
     if should_bud(plant_segment, simulation_config):
         # Age-based bud production for lateral branching
@@ -190,15 +215,18 @@ bud(bud_parameters) :
    bud_parameters.num_buds+=1
    bud_parameters.type.info.num_branches+=1
 
+   nproduce [
+   if generalized_cylinder:
+     nproduce @Gc
    if hasattr(new_branch, 'curve_x_range'):
      # Curved branches: set up custom growth guide curve
-     curve = create_bezier_curve(x_range=new_branch.curve_x_range, y_range=new_branch.curve_y_range, z_range=new_branch.curve_z_range, seed_value=time.time())
-     nproduce[@GcSetGuide(curve, new_branch.growth.max_length)
-   else:
-     # Straight branches: use default orientation
-     nproduce [@Gc
+     curve = create_bezier_curve(x_range=new_branch.curve_x_range, y_range=new_branch.curve_y_range, z_range=new_branch.curve_z_range, seed_value=rd.randint(0,1000))
+     nproduceSetGuide(curve, new_branch.growth.max_length)
    # Produce new branch with random orientation and growth object
-   nproduce @RGetPos(new_branch.location.start)WoodStart(ParameterSet(type = new_branch))/(rd.random()*360)&(rd.random()*360)grow_object(new_branch)GetPos(new_branch.location.end)@Ge]bud(bud_parameters)
+   nproduce @RGetPos(new_branch.location.start)WoodStart(ParameterSet(type = new_branch))/(rd.random()*360)&(rd.random()*360)grow_object(new_branch)GetPos(new_branch.location.end)
+   if generalized_cylinder:
+     nproduce @Ge
+   produce ]bud(bud_parameters)
 
 # -----------------------------------------------------------------------------
 # GEOMETRIC INTERPRETATION (HOMOMORPHISM)

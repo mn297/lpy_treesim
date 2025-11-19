@@ -63,7 +63,7 @@ class InfoState:
     prunable: bool = True
     order: int = 0
     num_branches: int = 0
-    color: int = 0
+    color: tuple = (0, 0, 0)  # RGB tuple for visualization
     material: int = 0
     branch_dict: any = None  # collections.deque
     
@@ -96,8 +96,13 @@ class BasicWoodConfig:
     curve_z_range: tuple = (-1, 1)      # Z bounds for Bezier curve control points
     
     def __post_init__(self):
-        """Initialize mutable defaults if needed."""
-        pass
+      """Validate geometric parameters for consistent growth behavior."""
+      if self.growth_length is not None and self.cylinder_length is not None:
+        if self.growth_length < self.cylinder_length:
+          raise ValueError(
+            "BasicWoodConfig.growth_length must be >= cylinder_length "
+            f"(got {self.growth_length} < {self.cylinder_length})"
+          )
     
 class BasicWood(ABC):
   @staticmethod

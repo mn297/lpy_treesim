@@ -28,9 +28,10 @@ class SimulationConfig(ABC):
     num_iteration_tie: int = 5
     num_iteration_prune: int = 16
     
-    # Display Options
-    label: bool = True
-    
+    # Label Options
+    semantic_label: bool = False
+    instance_label: bool = True
+    per_cylinder_label: bool = False
     # Support Structure
     support_num_wires: int = 14
     support_spacing_wires: int = 1
@@ -45,12 +46,26 @@ class SimulationConfig(ABC):
     
     # L-System Parameters
     derivation_length: int = 128  # Number of derivation steps
+    use_generalized_cylinder: bool = False  # Whether to wrap new branches in @Gc/@Ge blocks
     
     # Growth Parameters
-    tolerance: float = 0.01  # Tolerance for age-based bud spacing (bud_age_tolerance)
+    tolerance: float = 1e-5  # Tolerance for comparison between floats
     
     # Visualization Parameters
     attractor_point_width: int = 10  # Width of attractor points in visualization
+
+    def __post_init__(self):
+        """Make sure only one labeling option is enabled at a time."""
+        label_options = [
+            self.semantic_label,
+            self.instance_label,
+            self.per_cylinder_label
+        ]
+        if sum(label_options) > 1:
+            raise ValueError(
+                "Only one of semantic_label, instance_label, or per_cylinder_label "
+                "can be True at a time."
+            )
 
 
 class TreeSimulationBase(ABC):
