@@ -1,45 +1,63 @@
 Installation
-==============
+============
 
-Installing L-Py
-***************
+`lpy_treesim` ships as a Python package plus a collection of L-Py grammars, so
+you need both the OpenAlea/L-Py toolchain and the Python modules in this repo.
 
-``L-Py`` distribution is based on the ``conda`` software environment management system.
-To install conda, you may refer to its installation page: https://docs.conda.io/projects/conda/en/latest/user-guide/install/
+Prerequisites
+-------------
 
+- **Conda (recommended)** for installing `openalea.lpy` and PlantGL.
+- **Python 3.9+** for running the helper scripts.
+- A GPU is not required; everything runs on CPU.
 
-Installing binaries using conda
+Set up the L-Py environment
+---------------------------
 
+1. Create a dedicated environment that contains L-Py and PlantGL:
 
+   .. code-block:: bash
 
-To install L-Py, you need to create an environment (named lpy in this case) :
+       conda create -n lpy openalea.lpy plantgl python=3.9 -c fredboudon -c conda-forge
+
+2. Activate the environment any time you work on the project:
+
+   .. code-block:: bash
+
+       conda activate lpy
+
+3. Validate the installation by launching the GUI (optional but handy for
+   debugging grammars):
+
+   .. code-block:: bash
+
+       lpy
+
+Install `lpy_treesim`
+---------------------
+
+With the environment active, clone and install the package in editable mode so
+that L-Py can import your custom prototypes:
 
 .. code-block:: bash
 
-        conda create -n lpy openalea.lpy -c fredboudon -c conda-forge
+    git clone https://github.com/OSUrobotics/lpy_treesim.git
+    cd lpy_treesim
+    pip install -e .
 
-The package is retrieved from the ``fredboudon`` channel (developement) and its dependencies will be taken from ``conda-forge`` channel.
+Editable installs expose modules such as `lpy_treesim.ColorManager` and ensure
+`examples/<tree>` can import the shared base grammar.
 
-Then, you need to activate the L-Py environment
+Optional tooling
+-----------------
 
-.. code-block:: bash
-
-        conda activate lpy
-
-And then run L-Py
-
-.. code-block:: bash
-
-        lpy
-
-For any issues with L-py, please check the documentation of L-Py provided here https://lpy.readthedocs.io/en/latest/user/installing.html
-
-
-Installing TreeSim_Lpy
-***********************
-
-With the conda environment for L-Py set, next we need to clone the TreeSim_Lpy repository. To do that run
+The repository includes a Sphinx documentation project. To build the docs
+locally install Sphinx, then run `make`:
 
 .. code-block:: bash
 
-        git clone https://github.com/OSUrobotics/treesim_lpy.git
+    cd lpy_treesim/lpy_treesim/docs
+    pip install sphinx
+    make html
+
+Open `_build/html/index.html` in a browser to preview the rendered docs.

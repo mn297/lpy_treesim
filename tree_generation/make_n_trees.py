@@ -1,41 +1,105 @@
-import os
-import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
-import random as rd
-from openalea.lpy import Lsystem
-from lpy_treesim.tree_generation.helpers import write
 import argparse
+from dataclasses import dataclass
+import os
+from pathlib import Path
+import random
+import sys
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--num_trees', type=int, default=1)
-    parser.add_argument('--output_dir', type=str, default='dataset/')
-    parser.add_argument('--lpy_file', type=str, default='examples/UFO_tie_prune_label.lpy')
-    parser.add_argument('--verbose', action='store_true', default=False)
+from openalea.lpy import Lsystem
+
+from lpy_treesim import ColorManager
+from lpy_treesim.tree_generation.helpers import write
+
+
+BASE_LPY_PATH = Path(__file__).resolve().parents[1] / "base_lpy.lpy"
+
+# Ensure repository root is discoverable for prototype imports
+sys.path.insert(0, str(BASE_LPY_PATH.parents[0]))
+
+
+MAX_TREES = 99_999
+
+
+@dataclass
+class TreeNamingConfig:
+    namespace: str
+    tree_type: str
+
+    def _prefix(self, index: int) -> str:
+        if index > MAX_TREES:
+            raise ValueError(f"Tree index {index} exceeds maximum supported value {MAX_TREES}.")
+        return f"{self.namespace}_{self.tree_type}_{index:05d}"
+
+    def mesh_filename(self, index: int) -> str:
+        return f"{self._prefix(index)}.ply"
+
+    def color_map_filename(self, index: int) -> str:
+        return f"{self._prefix(index)}_colors.json"
+
+
+def build_lsystem(tree_name: str) -> tuple[Lsystem, ColorManager]:
+    color_manager = ColorManager()
+    extern_vars = {
+        "prototype_dict_path": f"examples.{tree_name}.{tree_name}_prototypes.basicwood_prototypes",
+        "trunk_class_path": f"examples.{tree_name}.{tree_name}_prototypes.Trunk",
+        "simulation_config_class_path": f"examples.{tree_name}.{tree_name}_simulation.{tree_name}SimulationConfig",
+        "simulation_class_path": f"examples.{tree_name}.{tree_name}_simulation.{tree_name}Simulation",
+        "color_manager": color_manager,
+        "axiom_pitch": 0.0,
+        "axiom_yaw": 0.0,
+    }
+    lsystem = Lsystem(str(BASE_LPY_PATH), extern_vars)
+    return lsystem, color_manager
+
+
+def generate_tree(lsystem: Lsystem, rng_seed: int, verbose: bool):
+    random.seed(rng_seed)
+    if verbose:
+        print(f"INFO: RNG seed {rng_seed}")
+    lstring = lsystem.axiom
+    for iteration in range(lsystem.derivationLength):
+        lstring = lsystem.derive(lstring, iteration, 1)
+        lsystem.plot(lstring)
+    return lstring, lsystem.sceneInterpretation(lstring)
+
+
+def ensure_output_dir(path: Path):
+    path.mkdir(parents=True, exist_ok=True)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate and save multiple L-Py trees.")
+    parser.add_argument('--num_trees', type=int, default=1, help='Number of trees to generate')
+    parser.add_argument('--output_dir', type=Path, default=Path('dataset/'), help='Directory for outputs')
+    parser.add_argument('--tree_name', type=str, default='UFO', help='Tree family to generate (UFO/Envy/etc.)')
+    parser.add_argument('--verbose', action='store_true', help='Print progress details')
+    parser.add_argument('--rng-seed', type=int, default=None, help='Optional deterministic seed')
+    parser.add_argument('--namespace', type=str, default='lpy', help='Prefix namespace for output filenames')
     args = parser.parse_args()
-    num_trees = args.num_trees
-    output_dir = args.output_dir
-    lpy_file = args.lpy_file
 
-    for i in range(num_trees):
+    if args.num_trees > (MAX_TREES + 1):
+        raise ValueError(f"num_trees={args.num_trees} exceeds supported maximum of {MAX_TREES + 1}.")
+
+    naming = TreeNamingConfig(namespace=args.namespace, tree_type=args.tree_name)
+    ensure_output_dir(args.output_dir)
+
+    rng = random.Random(args.rng_seed)
+    for index in range(args.num_trees):
+        lsystem, color_manager = build_lsystem(args.tree_name)
+        seed_value = rng.randint(0, 1_000_000)
         if args.verbose:
-            print("INFO: Generating tree number: ", i)
-        rand_seed = rd.randint(0,1000)
-        variables = {'label': True, 'seed_val': rand_seed}
-        l = Lsystem(lpy_file, variables)
-        lstring = l.axiom
-        for time in range(l.derivationLength):
-            lstring = l.derive(lstring, time, 1)
-            l.plot(lstring)
-        # l.plot()
-        scene = l.sceneInterpretation(lstring)
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
+            print(f"INFO: Generating {args.tree_name} tree #{index:03d}")
+        lstring, scene = generate_tree(lsystem, seed_value, args.verbose)
+        mesh_path = args.output_dir / naming.mesh_filename(index)
+        color_path = args.output_dir / naming.color_map_filename(index)
+        write(str(mesh_path), scene)
+        color_manager.export_mapping(str(color_path))
         if args.verbose:
-            print("INFO: Writing tree number: ", i)
-        # scene.save("{}/tree_{}.obj".format(output_dir, i))
-        write("{}/tree_{}.ply".format(output_dir, i), scene)
+            print(f"INFO: Wrote {mesh_path} and {color_path}")
         del scene
         del lstring
-        del l
+        del lsystem
+
+
+if __name__ == "__main__":
+    main()

@@ -1,25 +1,35 @@
+.. lpy_treesim documentation master file, created by
+   sphinx-quickstart on Tue Jul 16 11:58:11 2024.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
-TreeSim_Lpy documentation
-===================================
+Welcome to lpy_treesim's documentation!
+=======================================
 
-TreeSim_Lpy is a tree growing simulator based upon L-py (Fred Boudon). Using TreeSim you can perform various tasks
-like growing/pruning and tying trees as different architectures, with examples for a UFO cherry and Envy apple provided.
-Check out the :doc:`usage` section for further information, including
-how to :doc:`installation` the project.
+`lpy_treesim` bundles a reusable L-Py grammar (`base_lpy.lpy`),
+prototype definitions, and automation scripts so you can describe a new tree
+architecture and batch-generate thousands of 3D assets. These docs walk
+through the entire workflow:
 
-.. note::
-
-   This project is under active development.
-
-Contents
---------
+* set up the environment and dependencies,
+* design prototypes plus simulation parameters,
+* run the `make_n_trees.py` generator with deterministic naming, and
+* understand how the supporting modules fit together.
 
 .. toctree::
+   :maxdepth: 2
+   :caption: Contents:
 
-   Home <self>
    installation
    usage
    files
    resources
    methods
-   
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

@@ -83,7 +83,7 @@ class Spur(BasicWood):
       self.name = str(self.__class__.__name__) +'_'+ str(self.__class__.count)   
     Spur.count+=1
     self.num_leaves = 0
-    self.contour = create_noisy_circle_curve(1, .2, 30)
+    self.contour = create_noisy_branch_contour(1, .2, 30)
     
   def is_bud_break(self, num_buds_segment):
       return (rd.random() < 0.1)
@@ -119,10 +119,10 @@ class Branch(BasicWood):
       self.name = str(self.__class__.__name__) +'_'+ str(self.__class__.count)      
     Branch.count+=1
     self.num_buds_segment=0
-    self.contour = create_noisy_circle_curve(1, .2, 30)
+    self.contour = create_noisy_branch_contour(1, .2, 30)
                
   def is_bud_break(self, num_buds_segment):
-      return (rd.random() < 0.01*(1 - self.num_buds_segment/self.max_buds_segment))
+      return (rd.random() < 0.01*(1 - self.num_buds_segment/self.growth.max_buds_segment))
     
   def create_branch(self):
       self.num_buds_segment += 1
@@ -151,10 +151,10 @@ class Trunk(BasicWood):
     if not name:
       self.name = str(self.__class__.__name__) +'_'+ str(self.__class__.count)      
     Trunk.count+=1
-    self.contour = create_noisy_circle_curve(1, .2, 30)
+    self.contour = create_noisy_branch_contour(1, .2, 30)
     
   def is_bud_break(self, num_buds_segment):
-    if (rd.random() > 0.2*(1 - num_buds_segment/self.max_buds_segment)):
+    if (rd.random() > 0.2*(1 - num_buds_segment/self.growth.max_buds_segment)):
       return False
     return True
     
@@ -183,10 +183,10 @@ class NonTrunk(BasicWood):
     if not name:
       self.name = str(self.__class__.__name__) +'_'+ str(self.__class__.count)      
     Branch.count+=1
-    self.contour = create_noisy_circle_curve(1, .2, 30)
+    self.contour = create_noisy_branch_contour(1, .2, 30)
                
   def is_bud_break(self, num_buds_segment):
-      return (rd.random() < 0.02*(1 - num_buds_segment/self.max_buds_segment))
+      return (rd.random() < 0.02*(1 - num_buds_segment/self.growth.max_buds_segment))
     
   def create_branch(self):
       if rd.random()>0.9:
@@ -246,12 +246,12 @@ def get_energy_mat(branches, arch):
   energy_matrix = np.ones((num_branches,num_wires))*np.inf
   #print(energy_matrix.shape)
   for branch_id, branch in enumerate(branches):
-    if branch.has_tied:
+    if branch.tying.has_tied:
       continue
     for wire_id, wire in arch.branch_supports.items():
       if wire.num_branch>=1:
         continue
-      energy_matrix[branch_id][wire_id] = ed(wire.point,branch.end)/2+ed(wire.point,branch.start)/2#+v.num_branches*10+branch.bend_energy(deflection, curr_branch.age)
+      energy_matrix[branch_id][wire_id] = ed(wire.point,branch.location.end)/2+ed(wire.point,branch.location.start)/2#+v.num_branches*10+branch.bend_energy(deflection, curr_branch.info.age)
 
   return energy_matrix
   
@@ -261,9 +261,9 @@ def decide_guide(energy_matrix, branches, arch):
     #print(min_arg)
     if(energy_matrix[min_arg[0][0]][min_arg[0][1]] == np.inf) or energy_matrix[min_arg[0][0]][min_arg[0][1]] > 1:
       return
-    if not (branches[min_arg[0][0]].has_tied == True):# and not (arch.branch_supports[min_arg[0][1]].num_branch >=1):
+    if not (branches[min_arg[0][0]].tying.has_tied == True):# and not (arch.branch_supports[min_arg[0][1]].num_branch >=1):
       #print("Imp:",min_arg[0][0], min_arg[0][1], energy_matrix[min_arg[0][0]][min_arg[0][1]])
-      branches[min_arg[0][0]].guide_target = arch.branch_supports[min_arg[0][1]]#copy.deepcopy(arch.branch_supports[min_arg[0][1]].point)
+      branches[min_arg[0][0]].tying.guide_target = arch.branch_supports[min_arg[0][1]]#copy.deepcopy(arch.branch_supports[min_arg[0][1]].point)
       #trellis_wires.trellis_pts[min_arg[0][1]].num_branches+=1
       for j in range(energy_matrix.shape[1]):
         energy_matrix[min_arg[0][0]][j] = np.inf
@@ -273,13 +273,13 @@ def decide_guide(energy_matrix, branches, arch):
 def tie(lstring):
   for j,i in enumerate(lstring):
     if i == 'C' and i[0].type.__class__.__name__ == 'Branch':
-      if i[0].type.tie_updated == False:
+      if i[0].type.tying.tie_updated == False:
         continue
       curr = i[0]
-      if i[0].type.guide_points:
-        #print("tying ", i[0].type.name, i[0].type.guide_target.point)
-        i[0].type.tie_updated = False
-        i[0].type.guide_target.add_branch()
+      if i[0].type.tying.guide_points:
+        #print("tying ", i[0].type.name, i[0].type.tying.guide_target.point)
+        i[0].type.tying.tie_updated = False
+        i[0].type.tying.guide_target.add_branch()
         lstring, count = i[0].type.tie_lstring(lstring, j)
        
         return True
@@ -289,9 +289,9 @@ def tie(lstring):
 def pruning_strategy(lstring): #Remove remnants of cut
   cut = False
   for j,i in enumerate(lstring):
-    if i.name == 'C' and i[0].type.age > 6 and i[0].type.has_tied == False and i[0].type.cut == False:
+    if i.name == 'C' and i[0].type.info.age > 6 and i[0].type.tying.has_tied == False and i[0].type.info.cut == False:
       
-      i[0].type.cut = True      
+      i[0].type.info.cut = True      
       #print("Cutting", i[0].type.name) 
       lstring = cut_using_string_manipulation(j, lstring)
       return True
@@ -300,7 +300,7 @@ def pruning_strategy(lstring): #Remove remnants of cut
 def StartEach(lstring):
   global parent_child_dict
   for i in parent_child_dict[trunk_base.name]:
-      if i.tie_updated == False:
+      if i.tying.tie_updated == False:
         i.tie_update()
     
   
@@ -313,8 +313,8 @@ def EndEach(lstring):
     #print(energy_matrix)
     decide_guide(energy_matrix, parent_child_dict[trunk_base.name], support)
     for branch in parent_child_dict[trunk_base.name]:
-      branch.update_guide(branch.guide_target)
-      #print(branch.name, branch.guide_target)
+      branch.update_guide(branch.tying.guide_target)
+      #print(branch.name, branch.tying.guide_target)
     while tie(lstring):
       pass
     while pruning_strategy(lstring):
@@ -335,7 +335,7 @@ rd.seed(seed_val)
 
 
 # Added by Camp    
-def create_noisy_circle_curve(radius, noise_factor, num_points=100, seed=None):
+def create_noisy_branch_contour(radius, noise_factor, num_points=100, seed=None):
     if seed is not None:
         rd.seed(seed)
     t = np.linspace(0, 2 * np.pi, num_points, endpoint=False)
@@ -463,13 +463,13 @@ def make_leaf_guide():
 
  
 def reset_contour():
-  default_curve = create_noisy_circle_curve(1, 0, 30)  # Example of a simple default contour
+  default_curve = create_noisy_branch_contour(1, 0, 30)  # Example of a simple default contour
   nproduce SetContour(default_curve)
 
 global profile1, profile2, profile3    
-profile1 = create_noisy_circle_curve(1, .2, 30, 23)
-profile2 = create_noisy_circle_curve(1, .2, 30)
-profile3 = create_noisy_circle_curve(1, .2, 30)
+profile1 = create_noisy_branch_contour(1, .2, 30, 23)
+profile2 = create_noisy_branch_contour(1, .2, 30)
+profile3 = create_noisy_branch_contour(1, .2, 30)
 # print("Labelling: ", label)
 # print("Seed ", seed_val)
 
@@ -483,21 +483,21 @@ grow_object(o) :
   if o == None:
     produce *
   else:
-    if o.length >= o.max_length:
-      o.age += 1
+    if o.length >= o.growth.max_length:
+      o.info.age += 1
       nproduce *
     else:
       # Apply color
-      r, g, b = o.color
+      r, g, b = o.info.color
       nproduce SetColor(r, g, b)
       # set unique color ID
       smallest_color = [r, g, b].index(min([r, g, b]))
-      o.color[smallest_color] += 1
+      o.info.color[smallest_color] += 1
       
       # Check if it's a trunk or branch, then apply the contour
       if 'Trunk' in o.name or 'Branch' in o.name:
         #print("TRUNK BRANCH NAME:    " + o.name)
-        radius = o.thickness
+        radius = o.growth.thickness
         noise_factor = 0.8
         num_points = 60
         nproduce SetContour(o.contour)
@@ -507,7 +507,7 @@ grow_object(o) :
       
       o.grow_one()
       if 'Spur' in o.name:
-        produce I(o.growth_length, o.thickness, o) bud(ParameterSet(type=o, num_buds=0)) spiked_bud(o.thickness)grow_object(o)
+        produce I(o.growth.growth_length, o.growth.thickness, o) bud(ParameterSet(type=o, num_buds=0)) spiked_bud(o.growth.thickness)grow_object(o)
       elif 'Leaf' in o.name:
         produce L(.1)
       elif 'Apple' in o.name:
@@ -516,7 +516,7 @@ grow_object(o) :
         #produce [S(.1, .007)Ap]
         produce [S(.1/2, .09/15)f(.1)&(180)A(.1, .09)]
       else:
-        produce I(o.growth_length, o.thickness, o) bud(ParameterSet(type=o, num_buds=0)) grow_object(o)
+        produce I(o.growth.growth_length, o.growth.thickness, o) bud(ParameterSet(type=o, num_buds=0)) grow_object(o)
 #L(.1)
 
 bud(t) :
@@ -528,7 +528,7 @@ bud(t) :
    parent_child_dict[t.type.name].append(new_object)
    #Store new object somewhere
    t.num_buds+=1
-   t.type.num_branches+=1
+   t.type.info.num_branches+=1
    
    # set a different cross section for every branch
    if 'Leaf' not in new_object.name and 'Apple' not in new_object.name:
@@ -538,13 +538,13 @@ bud(t) :
    # set a curve for tertiary branches to follow as they grow  
    if 'NonTrunk' in new_object.name:
         import time
-        r, g, b = new_object.color
+        r, g, b = new_object.info.color
         seed = rgb_seed(r, g, b)
         curve = create_bezier_curve(seed=time.time())
-        nproduce [SetGuide(curve, new_object.max_length)
+        nproduce [SetGuide(curve, new_object.growth.max_length)
    else:
      nproduce [
-   nproduce @RGetPos(new_object.start)C(ParameterSet(type = new_object))/(rd.random()*360)&(rd.random()*90)grow_object(new_object)GetPos(new_object.end)]bud(t)
+   nproduce @RGetPos(new_object.location.start)C(ParameterSet(type = new_object))/(rd.random()*360)&(rd.random()*90)grow_object(new_object)GetPos(new_object.location.end)]bud(t)
 
 spiked_bud(r):
   base_height = r * 2
@@ -585,8 +585,8 @@ L(l):
   produce _(.0025) F(l/10){[SetGuide(curve1, l) _(.001).nF(l, .01)][SetGuide(curve2, l)_(.001).nF(l, .01)]}
 
    
-I(s,r,o) --> I(s,r+o.thickness_increment, o)
-#_(r) --> _(r+o.thickness_increment)
+I(s,r,o) --> I(s,r+o.growth.thickness_increment, o)
+#_(r) --> _(r+o.growth.thickness_increment)
 _(r) --> _(r)
 homomorphism:
 I(a,r,o) --> F(a,r)
