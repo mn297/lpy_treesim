@@ -1,23 +1,29 @@
 Resources
 =========
 
-This page provides a list of resources related to the `lpy_treesim` project.
+This section collects official links plus background material on L-systems and
+training systems referenced by `lpy_treesim`.
 
-Project Links
+Project links
 -------------
 
-- **GitHub Repository**: `https://github.com/your-username/lpy_treesim <https://github.com/your-username/lpy_treesim>`_
-- **Documentation**: `https://lpy_treesim.readthedocs.io/en/latest/ <https://lpy_treesim.readthedocs.io/en/latest/>`_
+- **GitHub**: `https://github.com/OSUrobotics/lpy_treesim <https://github.com/OSUrobotics/lpy_treesim>`_
+- **Issue tracker**: Use the GitHub repo to report bugs or request new tree
+	templates.
 
-L-Py Resources
---------------
+L-Py and Plant Modeling
+-----------------------
 
-- **L-Py Documentation**: `https://lpy.readthedocs.io/en/latest/ <https://lpy.readthedocs.io/en/latest/>`_
-- **L-Py Training Material**: `https://github.com/fredboudon/lpy-training <https://github.com/fredboudon/lpy-training>`_
-- **L-Py Paper**: `https://example.com/lpy-paper <https://example.com/lpy-paper>`_ (Replace with the actual link to the L-Py paper)
+- **L-Py documentation**: `https://lpy.readthedocs.io/en/latest/ <https://lpy.readthedocs.io/en/latest/>`_
+- **OpenAlea/PlantGL**: `https://openalea.readthedocs.io/en/latest/ <https://openalea.readthedocs.io/en/latest/>`_
+- **L-Py training notebooks** (official tutorials):
+	`https://github.com/fredboudon/lpy-training <https://github.com/fredboudon/lpy-training>`_
+- **Foundational paper**: Prusinkiewicz & Lindenmayer, *The Algorithmic Beauty
+	of Plants*, for a deep dive into L-systems.
 
-Other Resources
----------------
+Supporting tooling
+------------------
 
-- **Conda Documentation**: `https://docs.conda.io/en/latest/ <https://docs.conda.io/en/latest/>`_
-- **Sphinx Documentation**: `https://www.sphinx-doc.org/en/master/ <https://www.sphinx-doc.org/en/master/>`_
+- **Conda documentation**: `https://docs.conda.io/en/latest/ <https://docs.conda.io/en/latest/>`_
+- **Sphinx documentation**: `https://www.sphinx-doc.org/en/master/ <https://www.sphinx-doc.org/en/master/>`_
+- **PLY file format**: `http://paulbourke.net/dataformats/ply/ <http://paulbourke.net/dataformats/ply/>`_ (useful when post-processing meshes).

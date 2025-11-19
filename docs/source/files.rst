@@ -1,51 +1,74 @@
 Files and Directory Structure
 =============================
 
-This document provides an overview of the important files and directories in the `lpy_treesim` project.
+The project is organized so that every custom tree lives wholly inside the
+`examples/` package, while the shared runtime sits at the repository root.
 
-Top-Level Files
----------------
+Top-level Python modules
+------------------------
 
-- **`README.rst`**: The main README file for the project.
-- **`helper.py`**: Contains helper functions used by other scripts in the project.
-- **`stochastic_tree.py`**: The core module for generating stochastic trees.
-- **`.gitignore`**: A file that specifies which files and directories to ignore in a Git repository.
+``base_lpy.lpy``
+    The canonical L-Py grammar. It loads extern variables that point to your
+    prototype dictionary, simulation classes, and color manager, then drives the
+    derivation/prune/tie loop.
 
-`docs/`
--------
+``simulation_base.py``
+    Defines `SimulationConfig` and `TreeSimulationBase`. All simulation files in
+    `examples/<TreeName>` inherit from these classes.
 
-This directory contains the documentation for the project.
+``stochastic_tree.py``
+    Hosts the `TreeBranch`, `BasicWood`, `Support`, and related data structures
+    referenced by prototypes.
 
-- **`Makefile`**: A makefile with commands to build the documentation.
-- **`source/`**: The source files for the documentation, written in reStructuredText.
-    - **`conf.py`**: The configuration file for Sphinx, the documentation generator.
-    - **`index.rst`**: The main entry point for the documentation.
-    - **`installation.rst`**: Instructions on how to install the project.
-    - **`usage.rst`**: An explanation of how to use the project.
-    - **`files.rst`**: An overview of the important files and directories in the project.
-    - **`resources.rst`**: A list of resources related to the project.
-    - **`methods.rst`**: A description of the methods used in the project.
-- **`_static/`**: Static files, such as images and videos, that are used in the documentation.
+``color_manager.py``
+    Implements `ColorManager`, which tracks per-instance color IDs and can dump
+    them via `export_mapping` to JSON.
 
-`examples/`
------------
+Documentation (`docs/`)
+-----------------------
 
-This directory contains example `.lpy` files that demonstrate how to use `lpy_treesim`.
+Sphinx project containing the pages you are reading now. Run `make html` inside
+`lpy_treesim/docs` to build the site locally.
 
-- **`legacy/`**: Older example files.
-- **`UFO/`**: Examples related to the UFO cherry tree architecture.
+Examples (`examples/`)
+----------------------
 
-`modules_test/`
----------------
+Each subfolder describes one tree training system. For `UFO` you will find:
 
-This directory contains test files for the modules in the project. The files in this folder use classes and functions defined in `stochastic_tree.py` and can be a good example of how to use the `BasicWood`, `Wire`, and `Support` classes.
+``examples/UFO/UFO_prototypes.py``
+    Prototype classes (`Trunk`, `Branch`, `Spur`, etc.) plus the
+    `basicwood_prototypes` dictionary.
 
-`other_files/`
---------------
+``examples/UFO/UFO_simulation.py``
+    `UFOSimulationConfig` and `UFOSimulation`, consumed by the base grammar.
 
-These files may or may not work. They were used in previous iterations of `lpy_treesim` and are kept for reference.
+``examples/UFO/UFO.lpy``
+    Optional GUI entry point if you want to run the species manually inside
+    L-Py. Most development happens via `base_lpy.lpy`, but the standalone files
+    are helpful for debugging.
 
-`tree_generation/`
-------------------
+Add a new tree type by duplicating this directory and renaming files to match
+your `--tree_name` argument.
 
-This directory contains scripts for generating and converting tree models.
+Tree generation utilities (`tree_generation/`)
+---------------------------------------------
+
+``tree_generation/make_n_trees.py``
+    CLI entry point that imports the base grammar, wires in your prototypes, and
+    exports `.ply` meshes plus `{...}_colors.json` label maps. Accepts
+    `--num_trees`, `--namespace`, `--rng-seed`, and `--output_dir`.
+
+``tree_generation/helpers.py``
+    Contains `write` (PLY serializer) and other small utilities referenced by
+    the generator.
+
+Supporting assets
+-----------------
+
+``dataset/``
+    Destination for generated `.ply` files by default. Subfolders such as
+    `test_output/` are safe to delete or replace with your own datasets.
+
+``media/`` and ``other_files/``
+    Legacy L-Py grammars, renderings, and experiments kept for historical
+    reference.
