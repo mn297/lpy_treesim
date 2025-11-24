@@ -431,7 +431,7 @@ class TreeBranch(BasicWood):
         
         # Set up contour (subclasses can override contour_params)
         radius, noise_factor, num_points = contour_params
-        self.contour = create_noisy_branch_contour(radius, noise_factor, num_points)
+        self.contour = None#create_noisy_branch_contour(radius, noise_factor, num_points)
         
         # Initialize common attributes
         self.num_buds = 0

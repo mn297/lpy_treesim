@@ -11,7 +11,7 @@ class UFOSimulationConfig(SimulationConfig):
     # Override base defaults for UFO-specific values
     num_iteration_tie: int = 8
     num_iteration_prune: int = 16
-    pruning_age_threshold: int = 800
+    pruning_age_threshold: int = 8
     derivation_length: int = 160
     
     # UFO-specific Support Structure

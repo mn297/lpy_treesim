@@ -60,6 +60,7 @@ def generate_tree(lsystem: Lsystem, rng_seed: int, verbose: bool):
     for iteration in range(lsystem.derivationLength):
         lstring = lsystem.derive(lstring, iteration, 1)
         lsystem.plot(lstring)
+        # input("Press Enter to continue...")
     return lstring, lsystem.sceneInterpretation(lstring)
 
 
