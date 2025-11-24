@@ -9,7 +9,7 @@ from openalea.lpy import Lsystem
 
 from lpy_treesim import ColorManager
 from lpy_treesim.tree_generation.helpers import write
-
+from lpy_treesim.tree_generation.mesh_to_cylinders import add_cylinder_params_to_json
 
 BASE_LPY_PATH = Path(__file__).resolve().parents[1] / "base_lpy.lpy"
 
@@ -97,6 +97,8 @@ def main():
         color_manager.export_mapping(str(color_path))
         if args.verbose:
             print(f"INFO: Wrote {mesh_path} and {color_path}")
+        if lsystem.simulation_config.per_cylinder_label:
+            add_cylinder_params_to_json(str(mesh_path), str(color_path))
         del scene
         del lstring
         del lsystem

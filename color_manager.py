@@ -40,7 +40,7 @@ class ColorManager:
         """Export color -> name mapping to JSON"""
         export_dict = {}
         for color, name in self.color_to_name.items():
-            export_dict[str(color)] = name
+            export_dict[str(color)] = {"part_name": name}
 
         with open(filename, "w") as f:
             json.dump(export_dict, f, indent=4)
