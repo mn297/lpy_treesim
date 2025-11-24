@@ -29,7 +29,7 @@ def write(fname, scene):
             face = p.indexList
             n = len(p.pointList)
             if n > 0:
-                color = i.appearance.ambient
+                color = i.appearance.diffuseColor()
                 for j in pts:
                     vertices.append((j, color))
                 for j in face:

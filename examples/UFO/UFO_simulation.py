@@ -11,7 +11,7 @@ class UFOSimulationConfig(SimulationConfig):
     # Override base defaults for UFO-specific values
     num_iteration_tie: int = 8
     num_iteration_prune: int = 16
-    pruning_age_threshold: int = 8
+    pruning_age_threshold: int = 800
     derivation_length: int = 160
     
     # UFO-specific Support Structure
@@ -26,9 +26,10 @@ class UFOSimulationConfig(SimulationConfig):
     
     # UFO-specific Growth Parameters
     thickness_multiplier: float = 1.2  # Multiplier for internode thickness
-    semantic_label: bool = True
+    semantic_label: bool = False
     instance_label: bool = False
-    per_cylinder_label: bool = False
+    per_cylinder_label: bool = True
+    use_generalized_cylinders: bool = False
 
 
 class UFOSimulation(TreeSimulationBase):

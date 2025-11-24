@@ -119,7 +119,7 @@ module grow_object    # Growing plant parts (trunk, branches, spurs) with length
 module bud           # Dormant buds that can break to produce new branches
 module branch        # Branch segments in the L-System string
 module WoodStart     # Starting point of wood segments (used for tying operations)
-
+module trunk
 # -----------------------------------------------------------------------------
 # GLOBAL L-SYSTEM PARAMETERS
 # -----------------------------------------------------------------------------
@@ -132,7 +132,7 @@ trunk_guide_curve = create_bezier_curve(x_range = (-1, 1), y_range = (-1, 1), z_
 # The initial L-System string that begins the simulation.
 # Starts with the trellis attractors, sets up the trunk guide curve,
 # and initializes the trunk growth with proper orientation.
-Axiom: Attractors(trellis_support)SetGuide(trunk_guide_curve, main_trunk.growth.max_length)[@GcGetPos(main_trunk.location.start)WoodStart(ParameterSet(type = main_trunk))&(axiom_pitch)/(axiom_yaw)grow_object(main_trunk)GetPos(main_trunk.location.end)@Ge]
+Axiom: Attractors(trellis_support)SetGuide(trunk_guide_curve, main_trunk.growth.max_length)trunk
 
 # -----------------------------------------------------------------------------
 # DERIVATION PARAMETERS
@@ -160,7 +160,8 @@ grow_object(plant_segment) :
     nproduce *
   else:
     # Continue growing - update segment properties
-    nproduce SetContour(plant_segment.contour)
+    if plant_segment.contour is not None:
+      nproduce SetContour(plant_segment.contour)
     #Update internal state of the plant segment
     plant_segment.grow_one()
     #Update physical representation
@@ -180,7 +181,7 @@ grow_object(plant_segment) :
     for i in range(n_cylinders):
       if enable_per_cylinder_labeling:
         r, g, b = color_manager.get_unique_color(plant_segment.name, if_exists=False)
-        nproduce SetColor(r,g,b)  
+        nproduce SetColor(r, g, b)
       nproduce I(plant_segment.growth.cylinder_length, plant_segment.growth.thickness, plant_segment)
     #Produce bud (after all cylinders in this growth step)
     if plant_segment.pre_bud_rule(plant_segment, simulation_config):
@@ -228,6 +229,11 @@ bud(bud_parameters) :
      nproduce @Ge
    produce ]bud(bud_parameters)
 
+trunk():
+  if generalized_cylinder:
+    produce [@GcGetPos(main_trunk.location.start)WoodStart(ParameterSet(type = main_trunk))&(axiom_pitch)/(axiom_yaw)grow_object(main_trunk)GetPos(main_trunk.location.end)@Ge]
+  else:
+    produce [GetPos(main_trunk.location.start)WoodStart(ParameterSet(type = main_trunk))&(axiom_pitch)/(axiom_yaw)grow_object(main_trunk)GetPos(main_trunk.location.end)]
 # -----------------------------------------------------------------------------
 # GEOMETRIC INTERPRETATION (HOMOMORPHISM)
 # -----------------------------------------------------------------------------
