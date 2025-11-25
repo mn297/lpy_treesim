@@ -24,10 +24,10 @@ class EnvySimulationConfig(SimulationConfig):
     trellis_z_end: float = 3.4
     trellis_z_spacing: float = 0.45
 
-    # Envy-specific Growth Parameters
     semantic_label: bool = True
     instance_label: bool = False
     per_cylinder_label: bool = False
+    use_generalized_cylinders: bool = False
 
 
 class EnvySimulation(TreeSimulationBase):

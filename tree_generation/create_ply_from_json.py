@@ -6,17 +6,17 @@ import math
 
 def rotation_matrix_from_vectors(vec1, vec2):
     """Find the rotation matrix that aligns vec1 to vec2."""
-    a, b = np.array(vec1), np.array(vec2)
-    a = a / np.linalg.norm(a)
-    b = b / np.linalg.norm(b)
-    v = np.cross(a, b)
-    c = np.dot(a, b)
-    s = np.linalg.norm(v)
-    if s == 0:
-        return np.eye(3)
-    v = v / s
-    vx = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
-    return np.eye(3) + vx + vx @ vx * ((1 - c) / (s ** 2))
+    a, b = np.array(vec1), np.array(vec2)  # Convert inputs to NumPy arrays for vector ops
+    a = a / np.linalg.norm(a)  # Normalize vec1 to unit vector
+    b = b / np.linalg.norm(b)  # Normalize vec2 to unit vector
+    v = np.cross(a, b)  # Cross product gives the axis of rotation (perpendicular to both vectors)
+    c = np.dot(a, b)  # Dot product gives cos(theta), where theta is the angle between vectors
+    s = np.linalg.norm(v)  # Magnitude of v, which is sin(theta)
+    if s == 0:  # If s == 0, vectors are parallel (aligned or anti-aligned), so no rotation needed
+        return np.eye(3)  # Return identity matrix (3x3)
+    v = v / s  # Normalize v to get the unit rotation axis
+    vx = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])  # Skew-symmetric matrix for cross product
+    return np.eye(3) + s * vx + (1 - c) * (vx @ vx)
 
 def create_cylinder_vertices_faces(centroid, radius, length, orientation = [0, 0, 1], slices=16, stacks=1):
     """
@@ -52,13 +52,17 @@ def create_cylinder_vertices_faces(centroid, radius, length, orientation = [0, 0
     
     # Bottom face
     bottom_center = len(vertices)
-    vertices.append((cx, cy, cz - length / 2))  # Approximate center, but should rotate too
+    bottom_point = np.array([0, 0, -length / 2])
+    rotated_bottom = rot_matrix @ bottom_point
+    vertices.append((cx + rotated_bottom[0], cy + rotated_bottom[1], cz + rotated_bottom[2]))
     for i in range(slices):
         faces.append([bottom_center, i, (i + 1) % slices])
     
     # Top face
     top_center = len(vertices)
-    vertices.append((cx, cy, cz + length / 2))
+    top_point = np.array([0, 0, length / 2])
+    rotated_top = rot_matrix @ top_point
+    vertices.append((cx + rotated_top[0], cy + rotated_top[1], cz + rotated_top[2]))
     offset = slices
     for i in range(slices):
         faces.append([top_center, offset + (i + 1) % slices, offset + i])
@@ -86,17 +90,18 @@ def create_ply_from_json(json_path, ply_path):
     vertex_offset = 0
     
     for color_key, value in data.items():
-        if isinstance(value, dict) and len(value.keys()) == 4:
+        if isinstance(value, dict) and len(value.keys()) == 5:
             part_name = value.get("part_name")
             centroid = value.get("centroid")
             radius = value.get("radius")
             length = value.get("length")
+            orientation = value.get("orientation")
             
             # Parse color from key, e.g., "(255, 0, 0)"
             color_str = color_key.strip('()')
             r, g, b = map(int, color_str.split(', '))
             
-            vertices, faces = create_cylinder_vertices_faces(centroid, radius, length)
+            vertices, faces = create_cylinder_vertices_faces(centroid, radius, length, orientation)
             
             # Add color to vertices
             colored_vertices = [(x, y, z, r, g, b) for x, y, z in vertices]

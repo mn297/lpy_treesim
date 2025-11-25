@@ -86,8 +86,12 @@ def compute_cylinder_params(vertices):
     distances = np.linalg.norm(perpendicular_vectors, axis=1)
     
     radius = np.mean(distances)
+
+    # 5. Rotation of the cylinder
+    # The principal axis is the direction of the cylinder
+    orientation = principal_axis.tolist()
     
-    return centroid.tolist(), float(radius), float(length)
+    return centroid.tolist(), float(radius), float(length), orientation
 
 def add_cylinder_params_to_json(ply_path, json_path, output_json_path=None):
     print(f"Processing {ply_path} and {json_path}...")
@@ -104,14 +108,14 @@ def add_cylinder_params_to_json(ply_path, json_path, output_json_path=None):
     # Update JSON
     for color_key, vertices in vertices_by_color.items():
         if color_key in data:
-            centroid, radius, length = compute_cylinder_params(vertices)
+            centroid, radius, length, orientation = compute_cylinder_params(vertices)
             
             current_value = data[color_key]
             
             # Check if already updated (list) or raw string
             part_name = current_value if isinstance(current_value, str) else current_value['part_name']
             
-            data[color_key] = {"part_name": part_name, "centroid": centroid, "radius": radius, "length": length}
+            data[color_key] = {"part_name": part_name, "centroid": centroid, "radius": radius, "length": length, "orientation": orientation}
             updated_count += 1
             
     if output_json_path is None:

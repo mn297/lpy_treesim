@@ -86,10 +86,13 @@ def main():
 
     rng = random.Random(args.rng_seed)
     for index in range(args.num_trees):
+        print(f"Generating tree {index + 1} of {args.num_trees}...")
         lsystem, color_manager = build_lsystem(args.tree_name)
+        print(f"Generating tree {index + 1} of {args.num_trees}...")
         seed_value = rng.randint(0, 1_000_000)
         if args.verbose:
             print(f"INFO: Generating {args.tree_name} tree #{index:03d}")
+        print(f"Generating tree {index + 1} of {args.num_trees}...")
         lstring, scene = generate_tree(lsystem, seed_value, args.verbose)
         mesh_path = args.output_dir / naming.mesh_filename(index)
         color_path = args.output_dir / naming.color_map_filename(index)

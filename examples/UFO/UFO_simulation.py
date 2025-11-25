@@ -26,6 +26,7 @@ class UFOSimulationConfig(SimulationConfig):
     
     # UFO-specific Growth Parameters
     thickness_multiplier: float = 1.2  # Multiplier for internode thickness
+    
     semantic_label: bool = False
     instance_label: bool = False
     per_cylinder_label: bool = True
