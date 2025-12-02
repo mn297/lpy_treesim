@@ -38,7 +38,12 @@ class TreeNamingConfig:
     def hierarchy_filename(self, index: int) -> str:
         return f"{self._prefix(index)}_hierarchy.json"
 
-def build_lsystem(tree_name: str) -> tuple[Lsystem, ColorManager, dict]:
+def build_lsystem(
+    tree_name: str,
+    semantic_label: bool = False,
+    instance_label: bool = False,
+    per_cylinder_label: bool = False
+) -> tuple[Lsystem, ColorManager, dict]:
     branch_hierarchy = {}
     color_manager = ColorManager()
     extern_vars = {
@@ -49,7 +54,10 @@ def build_lsystem(tree_name: str) -> tuple[Lsystem, ColorManager, dict]:
         "color_manager": color_manager,
         "axiom_pitch": 0.0,
         "axiom_yaw": 0.0,
-        "branch_hierarchy": branch_hierarchy
+        "branch_hierarchy": branch_hierarchy,
+        "semantic_label": semantic_label,
+        "instance_label": instance_label,
+        "per_cylinder_label": per_cylinder_label,
     }
     lsystem = Lsystem(str(BASE_LPY_PATH), extern_vars)
     return lsystem, color_manager, branch_hierarchy
@@ -89,6 +97,9 @@ def main():
     parser.add_argument('--verbose', action='store_true', help='Print progress details')
     parser.add_argument('--rng-seed', type=int, default=None, help='Optional deterministic seed')
     parser.add_argument('--namespace', type=str, default='lpy', help='Prefix namespace for output filenames')
+    parser.add_argument('--semantic-label', action='store_true', help='Enable semantic labeling')
+    parser.add_argument('--instance-label', action='store_true', help='Enable instance labeling')
+    parser.add_argument('--per-cylinder-label', action='store_true', help='Enable per-cylinder labeling')
     args = parser.parse_args()
 
     if args.num_trees > (MAX_TREES + 1):
@@ -100,7 +111,12 @@ def main():
     rng = random.Random(args.rng_seed)
     for index in range(args.num_trees):
         print(f"Generating tree {index + 1} of {args.num_trees}...")
-        lsystem, color_manager, branch_hierarchy = build_lsystem(args.tree_name)
+        lsystem, color_manager, branch_hierarchy = build_lsystem(
+            args.tree_name,
+            semantic_label=args.semantic_label,
+            instance_label=args.instance_label,
+            per_cylinder_label=args.per_cylinder_label
+        )
         print(f"Generating tree {index + 1} of {args.num_trees}...")
         seed_value = rng.randint(0, 1_000_000)
         if args.verbose:
@@ -114,7 +130,7 @@ def main():
         color_manager.export_mapping(str(color_path))
         if args.verbose:
             print(f"INFO: Wrote {mesh_path} and {color_path}")
-        if lsystem.simulation_config.per_cylinder_label:
+        if args.per_cylinder_label:
             add_cylinder_params_to_json(str(mesh_path), str(color_path))
         print(f"Generated tree {index + 1} of {args.num_trees} at {mesh_path}")
         export_hierarchy(branch_hierarchy, str(hierarchy_path), args.verbose)
