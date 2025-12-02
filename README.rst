@@ -10,9 +10,65 @@ TreeSim_Lpy is a tree modelling tool which is built upon L-py with the added fea
 Documentation
 -------------
 
-The documentation is provided at `Read the Docs <https://osurobotics.github.io/lpy_treesim/
+The documentation is provided at `Read the Docs <https://osurobotics.github.io/lpy_treesim/>
 
 You can find the latest L-Py documentation at <https://lpy.readthedocs.io/en/latest>
+
+Docker GUI (noVNC) and activating the `lpy` environment
+-------------------------------------------------------
+
+You can run TreeSim inside a Docker container that provides a virtual X display and noVNC (a browser VNC client).
+This container also provides a conda environment named ``lpy`` containing the required LPy packages.
+
+Build the Docker image (recommended tag: ``lpy-treesim:ubuntu22``):
+
+.. code-block:: bash
+
+   docker build -t lpy-treesim:ubuntu22 .
+
+Run the container (detached), mounting your local cloned workspace:
+
+.. code-block:: bash
+
+   # Mount the entire local repo to /app for editable install
+   docker run -d --name lpy-gui -p 6080:6080 -p 5900:5900 -v ${PWD}:/app lpy-treesim:ubuntu22
+
+This mounts your local cloned workspace (with all files like ``.git``, ``README.rst``, etc.) to ``/app``. The entrypoint installs the package in editable mode from the mounted code, so local changes are reflected immediately without rebuilding.
+
+Connect to the GUI with your browser:
+
+ - Visit: ``http://localhost:6080/vnc.html?host=localhost&port=6080``
+ - A desktop session with fluxbox and Xvfb will start, along with an xterm terminal.
+
+The Dockerfile and entrypoint are configured so the GUI terminal (xterm) is launched with the ``lpy`` conda environment automatically activated. If you prefer a manual shell or the container does not start an activated shell automatically, use these commands:
+
+.. code-block:: bash
+
+   # Open a bash shell with the 'lpy' environment activated (inside running container):
+   docker exec -it lpy-gui /bin/bash -lc ". /opt/conda/etc/profile.d/conda.sh && conda activate lpy && exec bash -i"
+
+   # Or use the helper script that always activates 'lpy' (convenience):
+   docker exec -it lpy-gui /usr/local/bin/enter-lpy
+
+To verify the environment is active inside the container:
+
+.. code-block:: bash
+
+   # Should print 'lpy' if activated
+   echo $CONDA_DEFAULT_ENV
+   python -c "import openalea.lpy; print('openalea.lpy import ok')"
+
+NOTE: You can copy and paste content in noVNC using the clipboard menu in the left bar and middle click (mouse button) to paste in the terminal.
+
+See the repository Dockerfile for more details about the installed packages and build steps.
+
+Making your first tree
+----------------------
+To create your first tree using TreeSim_Lpy, in the NoVNC window with the terminal with L-Py activated, run the following commands:
+.. code-block:: bash
+   python treesim_lpy/tree_generation/make_n_trees.py --num_trees 1 --output_dir ./dataset
+
+This should create a dataset folder in the current directory with one generated tree mesh in it. It should be available locally on your host machine in the cloned repository folder.
 
 Features
 --------
@@ -25,19 +81,6 @@ Features
 Contact
 -------
 
-For any questions or issues, please contact us through **GitHub Issues**. 
-
-
-Help and Support
-----------------
-
 Please open an **Issue** if you need support or you run into any error (Installation, Runtime, etc.).
 We'll try to resolve it as soon as possible.
-
-
-==============
-Citations
-==============
-
-   - F. Boudon, T. Cokelaer, C. Pradal, P. Prusinkiewicz and C. Godin, L-Py: an L-system simulation framework for modeling plant architecture development based on a dynamic language, Frontiers in Plant Science, 30 May 2012.
 

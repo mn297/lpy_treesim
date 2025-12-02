@@ -32,15 +32,35 @@ sleep 1
 echo "noVNC running on http://0.0.0.0:6080/"
 echo "Open in your browser: http://localhost:6080/vnc.html?host=localhost&port=6080"
 
-# Optionally start a visible terminal on the virtual display
-if command -v xterm >/dev/null 2>&1; then
-	DISPLAY=$DISPLAY xterm -geometry 120x30+10+10 &
+# Source conda to allow activation in xterm (useful for interactive shells)
+if [ -f /opt/conda/etc/profile.d/conda.sh ]; then
+	. /opt/conda/etc/profile.d/conda.sh
 fi
 
-conda init 
-source /root/.bashrc
+# Install the package in editable mode from mounted /app (if pyproject.toml exists)
+if [ -f /app/pyproject.toml ]; then
+    /opt/conda/bin/conda run -n lpy --no-capture-output pip install -e /app || true
+fi
+
+# Ensure non-login shells still source the root .bashrc if needed
+export BASH_ENV=/root/.bashrc
+
+# Optionally start a visible terminal on the virtual display and activate
+# the 'lpy' environment in it so the user gets an interactive shell already
+# set up for LPy usage.
+if command -v xterm >/dev/null 2>&1; then
+	# Start a visible terminal that runs the helper script /usr/local/bin/enter-lpy
+	# that activates the conda env and starts an interactive bash session.
+	if [ -x /usr/local/bin/enter-lpy ]; then
+		# Use -ls to ensure the shell runs as a login shell and sources /etc/profile
+		DISPLAY=$DISPLAY xterm -ls -geometry 120x30+10+10 -e "/usr/local/bin/enter-lpy" &
+	else
+		DISPLAY=$DISPLAY xterm -ls -geometry 120x30+10+10 -e "bash -lc '. /opt/conda/etc/profile.d/conda.sh && conda activate lpy && exec bash -i'" &
+	fi
+fi
+
 # Try to start L-Py GUI if available (don't fail the entrypoint if it isn't)
-if [ -x "/opt/conda/bin/conda" ]; then
+if command -v /opt/conda/bin/conda >/dev/null 2>&1; then
 	/opt/conda/bin/conda run -n lpy --no-capture-output lpy >/tmp/lpy.log 2>&1 || true
 fi
 
