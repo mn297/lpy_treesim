@@ -223,7 +223,7 @@ class TreeSimulationBase(ABC):
             # Set entire column (wire) to infinity - this wire can't accept more branches
             energy_matrix[:, wire_id] = np.inf
     
-    def prune(self, lstring):
+    def prune(self, lstring, branch_hierarchy):
         """
         Prune old branches that exceed the age threshold and haven't been tied to wires.
 
@@ -258,6 +258,7 @@ class TreeSimulationBase(ABC):
             # Check if this is a WoodStart module (represents a branch)
             if symbol.name == 'WoodStart':
                 branch = symbol[0].type
+                
 
                 # Check pruning criteria
                 age_exceeds_threshold = branch.info.age > self.config.pruning_age_threshold
@@ -272,6 +273,7 @@ class TreeSimulationBase(ABC):
 
                     # Remove the branch from the L-System string
                     lstring = cut_from(position, lstring)
+                    del branch_hierarchy[branch.name] #Can also search the hierarchy to remove the places where this is a child
 
                     return True
 

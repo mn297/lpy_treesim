@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 import random
 from lpy_treesim import ColorManager
-
+import json
 from openalea.lpy import Lsystem
 from lpy_treesim.tree_generation.helpers import write
 from lpy_treesim.tree_generation.mesh_to_cylinders import add_cylinder_params_to_json
@@ -33,10 +33,13 @@ class TreeNamingConfig:
         return f"{self._prefix(index)}.ply"
 
     def color_map_filename(self, index: int) -> str:
-        return f"{self._prefix(index)}_colors.json"
+        return f"{self._prefix(index)}_metadata.json"
 
+    def hierarchy_filename(self, index: int) -> str:
+        return f"{self._prefix(index)}_hierarchy.json"
 
-def build_lsystem(tree_name: str) -> tuple[Lsystem, ColorManager]:
+def build_lsystem(tree_name: str) -> tuple[Lsystem, ColorManager, dict]:
+    branch_hierarchy = {}
     color_manager = ColorManager()
     extern_vars = {
         "prototype_dict_path": f"examples.{tree_name}.{tree_name}_prototypes.basicwood_prototypes",
@@ -46,9 +49,10 @@ def build_lsystem(tree_name: str) -> tuple[Lsystem, ColorManager]:
         "color_manager": color_manager,
         "axiom_pitch": 0.0,
         "axiom_yaw": 0.0,
+        "branch_hierarchy": branch_hierarchy
     }
     lsystem = Lsystem(str(BASE_LPY_PATH), extern_vars)
-    return lsystem, color_manager
+    return lsystem, color_manager, branch_hierarchy
 
 
 def generate_tree(lsystem: Lsystem, rng_seed: int, verbose: bool):
@@ -65,6 +69,16 @@ def generate_tree(lsystem: Lsystem, rng_seed: int, verbose: bool):
 
 def ensure_output_dir(path: Path):
     path.mkdir(parents=True, exist_ok=True)
+
+def export_hierarchy(branch_hierarchy: dict, filepath: str, verbose: bool):
+    named_hierarchy = {}
+    for key, branch in branch_hierarchy.items():
+        named_hierarchy[key] = []
+        for child in branch:
+            named_hierarchy[key].append(child.name)
+    json.dump(named_hierarchy, open(filepath, 'w'), indent=4)
+    if verbose:
+        print(f"INFO: Exported branch hierarchy to {filepath}")
 
 
 def main():
@@ -86,7 +100,7 @@ def main():
     rng = random.Random(args.rng_seed)
     for index in range(args.num_trees):
         print(f"Generating tree {index + 1} of {args.num_trees}...")
-        lsystem, color_manager = build_lsystem(args.tree_name)
+        lsystem, color_manager, branch_hierarchy = build_lsystem(args.tree_name)
         print(f"Generating tree {index + 1} of {args.num_trees}...")
         seed_value = rng.randint(0, 1_000_000)
         if args.verbose:
@@ -95,12 +109,15 @@ def main():
         lstring, scene = generate_tree(lsystem, seed_value, args.verbose)
         mesh_path = args.output_dir / naming.mesh_filename(index)
         color_path = args.output_dir / naming.color_map_filename(index)
+        hierarchy_path = args.output_dir / naming.hierarchy_filename(index)
         write(str(mesh_path), scene)
         color_manager.export_mapping(str(color_path))
         if args.verbose:
             print(f"INFO: Wrote {mesh_path} and {color_path}")
         if lsystem.simulation_config.per_cylinder_label:
             add_cylinder_params_to_json(str(mesh_path), str(color_path))
+        print(f"Generated tree {index + 1} of {args.num_trees} at {mesh_path}")
+        export_hierarchy(branch_hierarchy, str(hierarchy_path), args.verbose)
         del scene
         del lstring
         del lsystem

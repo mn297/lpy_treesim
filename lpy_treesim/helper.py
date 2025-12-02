@@ -290,7 +290,7 @@ def end_each_common(
             pass
 
     if current_iteration % pruning_interval_iterations == 0:
-        while prune_fn(lstring, simulation_config):
+        while prune_fn(lstring, branch_hierarchy, simulation_config):
             pass
 
     return lstring
