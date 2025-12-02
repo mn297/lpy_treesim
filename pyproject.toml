@@ -39,7 +39,7 @@ Documentation = "https://treesim-lpy.readthedocs.io/"
 
 [tool.setuptools]
 packages = ["lpy_treesim"]
-package-dir = {"" = "."}
+package-dir = {"" = "lpy_treesim"}
 
 [tool.setuptools.package-data]
 lpy_treesim = ["*.lpy"]
