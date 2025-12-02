@@ -42,7 +42,7 @@ packages = ["lpy_treesim"]
 # The repository layout places the Python package in the `lpy_treesim` sub-directory
 # so map package roots to that folder. This change makes `pip install -e .` work
 # when called from the repository root.
-package-dir = {"" = "lpy_treesim"}
+package-dir = {"" = "."}
 
 [tool.setuptools.package-data]
 # Include all *.lpy files recursively across the package tree
