@@ -64,6 +64,14 @@ enable_semantic_labeling = semantic_label if semantic_label is not None else sim
 enable_instance_labeling = instance_label if instance_label is not None else simulation_config.instance_label
 enable_per_cylinder_labeling = per_cylinder_label if per_cylinder_label is not None else simulation_config.per_cylinder_label
 
+# Validate that at most one labeling option is enabled
+label_options = [enable_semantic_labeling, enable_instance_labeling, enable_per_cylinder_labeling]
+if sum(label_options) > 1:
+    raise ValueError(
+        "Only one of semantic_label, instance_label, or per_cylinder_label "
+        "can be True at a time."
+    )
+
 if (enable_instance_labeling or enable_per_cylinder_labeling) and color_manager is None:
   raise ValueError(
     "Instance labeling is enabled but no color_manager extern was provided."
