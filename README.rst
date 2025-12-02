@@ -5,7 +5,12 @@ TreeSim_Lpy
 Description
 -----------
 
-TreeSim_Lpy is a tree modelling tool which is built upon L-py with the added features of pruning and tying trees down to mimic different architectures. The tool uses python and prior knowledge of L-systems and L-Py is needed to work with this tool. This tool is ideal for researchers and developers working on botanical simulations and robotic harvesting applications.
+TreeSim_Lpy is a tree modelling tool which is built upon L-py with the added features of pruning and tying trees down to mimic different tree architectures such as Upright fruiting offshoot, V-Trellis, etc. 
+
+Applications
+------------
+Learning to Prune Branches in Modern Tree-Fruit Orchard - https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=11128361
+A Dataset for Semantic and Instance Segmentation of Modern Fruit Orchards - https://github.com/tqosu/MFO
 
 Documentation
 -------------
