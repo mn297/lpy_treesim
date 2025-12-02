@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lpy-treesim"
+version = "0.1.0"
+description = "Tree modeling tool using L-Py with pruning and tying features"
+readme = "README.rst"
+license = {file = "LICENSE"}
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = [
+    "numpy",
+    # Note: openalea.lpy and openalea.plantgl require conda installation
+    # See README.rst for setup instructions
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "flake8",
+]
+
+[project.urls]
+Homepage = "https://github.com/OSUrobotics/lpy_treesim"
+Repository = "https://github.com/OSUrobotics/lpy_treesim"
+Documentation = "https://treesim-lpy.readthedocs.io/"
+
+[tool.setuptools]
+packages = ["lpy_treesim"]
+package-dir = {"" = "."}
+
+[tool.setuptools.package-data]
+lpy_treesim = ["*.lpy"]
+
+[project.scripts]
+envy-sim = "lpy_treesim.examples.Envy.Envy:main"
+ufo-sim = "lpy_treesim.examples.UFO.UFO:main"
