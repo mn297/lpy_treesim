@@ -1,13 +1,12 @@
 import argparse
 from dataclasses import dataclass
 import os
+import sys
 from pathlib import Path
 import random
-import sys
+from lpy_treesim import ColorManager
 
 from openalea.lpy import Lsystem
-
-from lpy_treesim.lpy_treesim import ColorManager
 from lpy_treesim.tree_generation.helpers import write
 from lpy_treesim.tree_generation.mesh_to_cylinders import add_cylinder_params_to_json
 

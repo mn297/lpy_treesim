@@ -1,8 +1,6 @@
-import sys
-sys.path.append('../../')
+from lpy_treesim.simulation_base import SimulationConfig, TreeSimulationBase
 from dataclasses import dataclass
 import numpy as np
-from simulation_base import SimulationConfig, TreeSimulationBase
 
 @dataclass
 class EnvySimulationConfig(SimulationConfig):

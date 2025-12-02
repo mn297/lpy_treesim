@@ -13,7 +13,7 @@ and implement architecture-specific methods like point generation.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import numpy as np
-from helper import cut_from
+from lpy_treesim.helper import cut_from
 
 
 @dataclass

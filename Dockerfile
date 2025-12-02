@@ -48,10 +48,9 @@ RUN pip3 install websockify && \
 
 # Create app dir and copy project
 WORKDIR /app
-COPY . /app
 
 # Install your python package into the conda env (if pyproject exists)
-RUN git clone https://github.com/OSUrobotics/lpy_treesim.git
+RUN git clone -b docker_refactor https://github.com/OSUrobotics/lpy_treesim.git
 RUN conda run -n lpy --no-capture-output pip install ./lpy_treesim
 
 
