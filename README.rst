@@ -40,16 +40,6 @@ Connect to the GUI with your browser:
  - Visit: ``http://localhost:6080/vnc.html?host=localhost&port=6080``
  - A desktop session with fluxbox and Xvfb will start, along with an xterm terminal.
 
-The Dockerfile and entrypoint are configured so the GUI terminal (xterm) is launched with the ``lpy`` conda environment automatically activated. If you prefer a manual shell or the container does not start an activated shell automatically, use these commands:
-
-.. code-block:: bash
-
-   # Open a bash shell with the 'lpy' environment activated (inside running container):
-   docker exec -it lpy-gui /bin/bash -lc ". /opt/conda/etc/profile.d/conda.sh && conda activate lpy && exec bash -i"
-
-   # Or use the helper script that always activates 'lpy' (convenience):
-   docker exec -it lpy-gui /usr/local/bin/enter-lpy
-
 To verify the environment is active inside the container:
 
 .. code-block:: bash
