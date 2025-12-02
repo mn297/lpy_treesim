@@ -8,7 +8,7 @@ import copy
 import numpy as np
 from openalea.plantgl.scenegraph.cspline import CSpline
 import random as rd
-from helper import create_noisy_branch_contour
+from lpy_treesim.helper import create_noisy_branch_contour
 import collections
 from dataclasses import dataclass
 from typing import Tuple

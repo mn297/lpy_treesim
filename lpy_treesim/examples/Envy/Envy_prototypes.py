@@ -1,12 +1,10 @@
-import sys
-sys.path.append('../../')
-from stochastic_tree import Support, BasicWood, TreeBranch, BasicWoodConfig
+from lpy_treesim.stochastic_tree import Support, BasicWood, TreeBranch, BasicWoodConfig
 import numpy as np
 import random as rd
 from dataclasses import dataclass
 import copy
 from openalea.lpy import newmodule
-from helper import *
+from lpy_treesim.helper import *
 
 
 class Spur(TreeBranch):

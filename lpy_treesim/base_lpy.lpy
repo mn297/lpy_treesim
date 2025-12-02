@@ -30,6 +30,7 @@ extern(
     simulation_class_path = "examples.Envy.Envy_simulation.EnvySimulation",
     axiom_pitch = 0.0,
     axiom_yaw = 0.0,
+    branch_hierarchy = {}
 )# Resolve extern-provided dotted paths so the rest of the script can operate on
 # concrete classes/functions exactly like the Envy/UFO drivers do.
 basicwood_prototypes = resolve_attr(prototype_dict_path)
@@ -53,7 +54,7 @@ pruning_interval_iterations = simulation_config.num_iteration_prune
 main_trunk.tying.guide_target = trellis_support.trunk_wire
 
 # Track parent/child relationships for tying/pruning decisions.
-branch_hierarchy = {main_trunk.name: []}
+branch_hierarchy[main_trunk.name] =[]
 enable_semantic_labeling = simulation_config.semantic_label
 enable_instance_labeling = simulation_config.instance_label
 enable_per_cylinder_labeling = simulation_config.per_cylinder_label
@@ -76,8 +77,8 @@ def _tie(lstring, _config):
   return simulation.tie(lstring)
 
 
-def _prune(lstring, _config):
-  return simulation.prune(lstring)
+def _prune(lstring, branch_hierarchy, _config):
+  return simulation.prune(lstring, branch_hierarchy)
 
 # L-Py callbacks delegate to the Python helpers so architectures share logic.
 def StartEach(lstring):
@@ -115,8 +116,8 @@ generalized_cylinder = getattr(simulation_config, "use_generalized_cylinder", Fa
 # Define the vocabulary of symbols used in the L-System grammar.
 # Each module represents a different type of plant component or operation.
 module Attractors     # Trellis support structure that guides branch growth
-module grow_object    # Growing plant parts (trunk, branches, spurs) with length/thickness
-module bud           # Dormant buds that can break to produce new branches
+module grow_object(plant_segment, hierarchy)    # Growing plant parts (trunk, branches, spurs) with length/thickness and hierarchy dict
+module bud(bud_parameters, hierarchy)           # Dormant buds that can break to produce new branches with hierarchy dict
 module branch        # Branch segments in the L-System string
 module WoodStart     # Starting point of wood segments (used for tying operations)
 module trunk
@@ -131,8 +132,8 @@ trunk_guide_curve = create_bezier_curve(x_range = (-1, 1), y_range = (-1, 1), z_
 # -----------------------------------------------------------------------------
 # The initial L-System string that begins the simulation.
 # Starts with the trellis attractors, sets up the trunk guide curve,
-# and initializes the trunk growth with proper orientation.
-Axiom: Attractors(trellis_support)SetGuide(trunk_guide_curve, main_trunk.growth.max_length)trunk
+# and initializes the trunk growth with proper orientation and hierarchy dict.
+Axiom: Attractors(trellis_support)SetGuide(trunk_guide_curve, main_trunk.growth.max_length)trunk(branch_hierarchy)
 
 # -----------------------------------------------------------------------------
 # DERIVATION PARAMETERS
@@ -151,7 +152,7 @@ production:
 # GROW_OBJECT PRODUCTION RULE
 # Handles the growth of plant segments (trunk, branches, spurs)
 # Determines whether to continue growing, stop, or produce buds
-grow_object(plant_segment) :
+grow_object(plant_segment, hierarchy) :
   if plant_segment == None:
     # Null object - terminate this branch
     produce *
@@ -190,18 +191,18 @@ grow_object(plant_segment) :
 
     if should_bud(plant_segment, simulation_config):
         # Age-based bud production for lateral branching
-        nproduce bud(ParameterSet(type = plant_segment, num_buds = 0))
+        nproduce bud(ParameterSet(type = plant_segment, num_buds = 0), hierarchy)
         
         if plant_segment.post_bud_rule(plant_segment, simulation_config):
           for generated in plant_segment.post_bud_rule(plant_segment, simulation_config):
             nproduce new(generated[0], *generated[1])
     
-    produce grow_object(plant_segment)
+    produce grow_object(plant_segment, hierarchy)
 
 # BUD PRODUCTION RULE
 # Controls bud break and branch initiation
 # Determines when buds activate to produce new branches
-bud(bud_parameters) :
+bud(bud_parameters, hierarchy) :
  if bud_parameters.type.is_bud_break(bud_parameters.num_buds):
    # Bud break condition met - create new branch
 
@@ -224,16 +225,16 @@ bud(bud_parameters) :
      curve = create_bezier_curve(x_range=new_branch.curve_x_range, y_range=new_branch.curve_y_range, z_range=new_branch.curve_z_range, seed_value=rd.randint(0,1000))
      nproduceSetGuide(curve, new_branch.growth.max_length)
    # Produce new branch with random orientation and growth object
-   nproduce @RGetPos(new_branch.location.start)WoodStart(ParameterSet(type = new_branch))/(rd.random()*360)&(rd.random()*360)grow_object(new_branch)GetPos(new_branch.location.end)
+   nproduce @RGetPos(new_branch.location.start)WoodStart(ParameterSet(type = new_branch))/(rd.random()*360)&(rd.random()*360)grow_object(new_branch, hierarchy)GetPos(new_branch.location.end)
    if generalized_cylinder:
      nproduce @Ge
-   produce ]bud(bud_parameters)
+   produce ]bud(bud_parameters, hierarchy)
 
-trunk():
+trunk(hierarchy):
   if generalized_cylinder:
-    produce [@GcGetPos(main_trunk.location.start)WoodStart(ParameterSet(type = main_trunk))&(axiom_pitch)/(axiom_yaw)grow_object(main_trunk)GetPos(main_trunk.location.end)@Ge]
+    produce [@GcGetPos(main_trunk.location.start)WoodStart(ParameterSet(type = main_trunk))&(axiom_pitch)/(axiom_yaw)grow_object(main_trunk, hierarchy)GetPos(main_trunk.location.end)@Ge]
   else:
-    produce [GetPos(main_trunk.location.start)WoodStart(ParameterSet(type = main_trunk))&(axiom_pitch)/(axiom_yaw)grow_object(main_trunk)GetPos(main_trunk.location.end)]
+    produce [GetPos(main_trunk.location.start)WoodStart(ParameterSet(type = main_trunk))&(axiom_pitch)/(axiom_yaw)grow_object(main_trunk, hierarchy)GetPos(main_trunk.location.end)]
 # -----------------------------------------------------------------------------
 # GEOMETRIC INTERPRETATION (HOMOMORPHISM)
 # -----------------------------------------------------------------------------
