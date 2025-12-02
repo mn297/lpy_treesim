@@ -198,6 +198,7 @@ always loads `base_lpy.lpy` and expects your modules to live inside the
         --num_trees 64 \
         --output_dir dataset/ufo_batch \
         --rng-seed 42 \
+        --semantic-label \
         --verbose
 
 Important flags:
@@ -216,6 +217,23 @@ Important flags:
 ``--rng-seed``
     Provides reproducible randomness while still using a different seed for each
     tree inside the batch.
+
+``--semantic-label``
+    Enable semantic labeling mode. Parts of the tree are labeled by their
+    semantic type (trunk, branch, spur, etc.).
+
+``--instance-label``
+    Enable instance labeling mode. Each individual branch instance receives a
+    unique color for segmentation.
+
+``--per-cylinder-label``
+    Enable per-cylinder labeling mode. Each cylinder in the mesh receives a
+    unique identifier.
+
+.. note::
+    Only one labeling mode can be enabled at a time. If no labeling flag is
+    provided, the script falls back to the default labeling configuration
+    defined in the simulation config class.
 
 Outputs include:
 
