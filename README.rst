@@ -55,6 +55,7 @@ See the repository Dockerfile for more details about the installed packages and 
 Making your first tree
 ----------------------
 To create your first tree using TreeSim_Lpy, in the NoVNC window with the terminal with L-Py activated, run the following commands:
+
 .. code-block:: bash
    python treesim_lpy/tree_generation/make_n_trees.py --num_trees 1 --output_dir ./dataset
 
