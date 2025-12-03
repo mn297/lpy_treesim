@@ -59,10 +59,10 @@ main_trunk.tying.guide_target = trellis_support.trunk_wire
 # Track parent/child relationships for tying/pruning decisions.
 branch_hierarchy[main_trunk.name] =[]
 
-# Use extern-provided labeling flags if set, otherwise fall back to simulation_config values
-enable_semantic_labeling = semantic_label if semantic_label is not None else simulation_config.semantic_label
-enable_instance_labeling = instance_label if instance_label is not None else simulation_config.instance_label
-enable_per_cylinder_labeling = per_cylinder_label if per_cylinder_label is not None else simulation_config.per_cylinder_label
+# Use extern-provided labeling flags (set via command-line arguments in make_n_trees.py)
+enable_semantic_labeling = semantic_label if semantic_label is not None else False
+enable_instance_labeling = instance_label if instance_label is not None else False
+enable_per_cylinder_labeling = per_cylinder_label if per_cylinder_label is not None else False
 
 # Validate that at most one labeling option is enabled
 label_options = [enable_semantic_labeling, enable_instance_labeling, enable_per_cylinder_labeling]

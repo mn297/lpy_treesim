@@ -135,7 +135,6 @@ the runtime class:
         ufo_z_value: float = 1.4
         ufo_y_value: float = 0
         thickness_multiplier: float = 1.2
-        semantic_label: bool = True
 
     class UFOSimulation(TreeSimulationBase):
         def generate_points(self):
@@ -148,9 +147,7 @@ the runtime class:
             y = np.full((x.shape[0],), self.config.ufo_y_value)
             return list(zip(x, y, z))
 
-``SimulationConfig`` enforces consistent behavior via ``__post_init__``—only one
-labeling mode (semantic / instance / per-cylinder) can be true at a time. The
-base class also exposes:
+The base class exposes:
 
 * ``num_iteration_tie`` / ``num_iteration_prune``: cadence for maintenance.
 * ``energy_distance_weight`` / ``energy_threshold``: scoring knobs for the
@@ -232,8 +229,7 @@ Important flags:
 
 .. note::
     Only one labeling mode can be enabled at a time. If no labeling flag is
-    provided, the script falls back to the default labeling configuration
-    defined in the simulation config class.
+    provided, no labeling is applied to the generated trees.
 
 Outputs include:
 

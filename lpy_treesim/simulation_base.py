@@ -22,16 +22,16 @@ class SimulationConfig(ABC):
     
     Architecture-specific configs should inherit from this and add their own parameters.
     Common parameters across all architectures are defined here.
+    
+    Note: Labeling options (semantic_label, instance_label, per_cylinder_label) are
+    configured via command-line arguments in make_n_trees.py and passed as extern
+    variables to the L-system.
     """
     
     # Tying and Pruning Intervals
     num_iteration_tie: int = 5
     num_iteration_prune: int = 16
     
-    # Label Options
-    semantic_label: bool = False
-    instance_label: bool = True
-    per_cylinder_label: bool = False
     # Support Structure
     support_num_wires: int = 14
     support_spacing_wires: int = 1
@@ -53,19 +53,6 @@ class SimulationConfig(ABC):
     
     # Visualization Parameters
     attractor_point_width: int = 10  # Width of attractor points in visualization
-
-    def __post_init__(self):
-        """Make sure only one labeling option is enabled at a time."""
-        label_options = [
-            self.semantic_label,
-            self.instance_label,
-            self.per_cylinder_label
-        ]
-        if sum(label_options) > 1:
-            raise ValueError(
-                "Only one of semantic_label, instance_label, or per_cylinder_label "
-                "can be True at a time."
-            )
 
 
 class TreeSimulationBase(ABC):

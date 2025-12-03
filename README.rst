@@ -83,7 +83,7 @@ You can specify labeling options via command-line flags. Only one labeling mode 
    # Enable per-cylinder labeling
    python lpy_treesim/tree_generation/make_n_trees.py --num_trees 1 --per-cylinder-label
 
-If no labeling flag is provided, the script uses the default labeling configuration from the simulation config.
+If no labeling flag is provided, no labeling is applied to the generated trees.
 
 Features
 --------
