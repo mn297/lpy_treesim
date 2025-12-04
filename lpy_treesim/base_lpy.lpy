@@ -30,7 +30,10 @@ extern(
     simulation_class_path = "examples.Envy.Envy_simulation.EnvySimulation",
     axiom_pitch = 0.0,
     axiom_yaw = 0.0,
-    branch_hierarchy = {}
+    branch_hierarchy = {},
+    semantic_label = None,
+    instance_label = None,
+    per_cylinder_label = None,
 )# Resolve extern-provided dotted paths so the rest of the script can operate on
 # concrete classes/functions exactly like the Envy/UFO drivers do.
 basicwood_prototypes = resolve_attr(prototype_dict_path)
@@ -55,9 +58,19 @@ main_trunk.tying.guide_target = trellis_support.trunk_wire
 
 # Track parent/child relationships for tying/pruning decisions.
 branch_hierarchy[main_trunk.name] =[]
-enable_semantic_labeling = simulation_config.semantic_label
-enable_instance_labeling = simulation_config.instance_label
-enable_per_cylinder_labeling = simulation_config.per_cylinder_label
+
+# Use extern-provided labeling flags (set via command-line arguments in make_n_trees.py)
+enable_semantic_labeling = semantic_label if semantic_label is not None else False
+enable_instance_labeling = instance_label if instance_label is not None else False
+enable_per_cylinder_labeling = per_cylinder_label if per_cylinder_label is not None else False
+
+# Validate that at most one labeling option is enabled
+label_options = [enable_semantic_labeling, enable_instance_labeling, enable_per_cylinder_labeling]
+if sum(label_options) > 1:
+    raise ValueError(
+        "Only one of semantic_label, instance_label, or per_cylinder_label "
+        "can be True at a time."
+    )
 
 if (enable_instance_labeling or enable_per_cylinder_labeling) and color_manager is None:
   raise ValueError(

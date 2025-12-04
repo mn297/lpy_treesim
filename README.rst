@@ -69,6 +69,23 @@ To create your first tree using TreeSim_Lpy, in the NoVNC window with the termin
 
 This should create a dataset folder in the current directory with one generated tree mesh in it. It should be available locally on your host machine in the cloned repository folder.
 
+Labeling Options
+----------------
+You can specify labeling options via command-line flags. Only one labeling mode can be enabled at a time:
+
+.. code-block:: bash
+
+   # Enable semantic labeling
+   python lpy_treesim/tree_generation/make_n_trees.py --num_trees 1 --semantic-label
+
+   # Enable instance labeling
+   python lpy_treesim/tree_generation/make_n_trees.py --num_trees 1 --instance-label
+
+   # Enable per-cylinder labeling
+   python lpy_treesim/tree_generation/make_n_trees.py --num_trees 1 --per-cylinder-label
+
+If no labeling flag is provided, no labeling is applied to the generated trees.
+
 Features
 --------
 
