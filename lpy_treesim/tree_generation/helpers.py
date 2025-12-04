@@ -45,9 +45,9 @@ element vertex {}
 property float x
 property float y
 property float z
-property uchar diffuse_red
-property uchar diffuse_green
-property uchar diffuse_blue
+property uchar red
+property uchar green
+property uchar blue
 element face {}
 property list uchar int vertex_indices 
 end_header'''.format(len(vertices), len(faces))
