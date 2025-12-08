@@ -45,6 +45,7 @@ def build_lsystem(
     per_cylinder_label: bool = False
 ) -> tuple[Lsystem, ColorManager, dict]:
     branch_hierarchy = {}
+    parent_map = {}
     color_manager = ColorManager()
     extern_vars = {
         "prototype_dict_path": f"examples.{tree_name}.{tree_name}_prototypes.basicwood_prototypes",
@@ -55,6 +56,7 @@ def build_lsystem(
         "axiom_pitch": 0.0,
         "axiom_yaw": 0.0,
         "branch_hierarchy": branch_hierarchy,
+        "parent_map": parent_map,
         "semantic_label": semantic_label,
         "instance_label": instance_label,
         "per_cylinder_label": per_cylinder_label,

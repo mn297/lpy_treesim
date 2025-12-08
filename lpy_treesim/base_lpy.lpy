@@ -31,6 +31,7 @@ extern(
     axiom_pitch = 0.0,
     axiom_yaw = 0.0,
     branch_hierarchy = {},
+    parent_map = {},
     semantic_label = None,
     instance_label = None,
     per_cylinder_label = None,
@@ -91,7 +92,7 @@ def _tie(lstring, _config):
 
 
 def _prune(lstring, branch_hierarchy, _config):
-  return simulation.prune(lstring, branch_hierarchy)
+  return simulation.prune(lstring, branch_hierarchy, parent_map)
 
 # L-Py callbacks delegate to the Python helpers so architectures share logic.
 def StartEach(lstring):
@@ -226,6 +227,7 @@ bud(bud_parameters, hierarchy) :
    # Register new branch in parent-child relationship tracking
    branch_hierarchy[new_branch.name] = []
    branch_hierarchy[bud_parameters.type.name].append(new_branch)
+   parent_map[new_branch.name] = bud_parameters.type.name
    # Update branch counters
    bud_parameters.num_buds+=1
    bud_parameters.type.info.num_branches+=1

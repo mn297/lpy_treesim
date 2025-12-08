@@ -210,7 +210,7 @@ class TreeSimulationBase(ABC):
             # Set entire column (wire) to infinity - this wire can't accept more branches
             energy_matrix[:, wire_id] = np.inf
     
-    def prune(self, lstring, branch_hierarchy):
+    def prune(self, lstring, branch_hierarchy, parent_map=None):
         """
         Prune old branches that exceed the age threshold and haven't been tied to wires.
 
@@ -228,9 +228,13 @@ class TreeSimulationBase(ABC):
         When a branch meets all criteria, it is:
         - Marked as cut (to prevent re-processing)
         - Removed from the L-System string using cut_from()
+        - Removed from parent's children list (if parent_map provided)
 
         Args:
             lstring: The current L-System string containing modules and their parameters
+            branch_hierarchy: Dictionary mapping branch names to lists of child branches
+            parent_map: Optional dictionary mapping child branch names to parent branch names
+                       for efficient removal from parent's children list
 
         Returns:
             bool: True if a branch was pruned, False if no eligible branches found
@@ -260,7 +264,19 @@ class TreeSimulationBase(ABC):
 
                     # Remove the branch from the L-System string
                     lstring = cut_from(position, lstring)
-                    del branch_hierarchy[branch.name] #Can also search the hierarchy to remove the places where this is a child
+                    
+                    # Remove from parent's children list using parent_map for efficient lookup
+                    if parent_map and branch.name in parent_map:
+                        parent_name = parent_map[branch.name]
+                        if parent_name in branch_hierarchy:
+                            # Remove branch from parent's children list
+                            children = branch_hierarchy[parent_name]
+                            branch_hierarchy[parent_name] = [child for child in children if child.name != branch.name]
+                        # Remove from parent_map
+                        del parent_map[branch.name]
+                    
+                    # Remove the branch's own entry from hierarchy
+                    del branch_hierarchy[branch.name]
 
                     return True
 
