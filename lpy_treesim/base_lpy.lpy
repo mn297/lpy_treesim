@@ -31,7 +31,6 @@ extern(
     axiom_pitch = 0.0,
     axiom_yaw = 0.0,
     branch_hierarchy = {},
-    parent_map = {},
     semantic_label = None,
     instance_label = None,
     per_cylinder_label = None,
@@ -59,7 +58,8 @@ main_trunk.tying.guide_target = trellis_support.trunk_wire
 
 # Track parent/child relationships for tying/pruning decisions.
 # branch_hierarchy: dict[str, list] maps parent name to list of child branch objects
-# parent_map: dict[str, str] maps child name to parent name for O(1) parent lookup
+# parent_map: dict[str, str] maps child name to parent name for O(1) parent lookup during pruning
+parent_map = {}  # Internal bookkeeping for efficient parent lookup
 branch_hierarchy[main_trunk.name] =[]
 
 # Use extern-provided labeling flags (set via command-line arguments in make_n_trees.py)
