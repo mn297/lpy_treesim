@@ -249,7 +249,7 @@ class TreeSimulationBase(ABC):
 
                 # Check pruning criteria
                 age_exceeds_threshold = branch.info.age > self.config.pruning_age_threshold
-                not_tied_to_wire = not branch.tying.has_tied
+                not_tied_to_wire = not branch.tying.has_tied or branch.tying.guide_target is None
                 not_already_cut = not branch.info.cut
                 is_prunable = branch.info.prunable
 
