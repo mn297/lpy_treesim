@@ -31,6 +31,9 @@ dev = [
     "black",
     "flake8",
 ]
+viz = [
+    "open3d>=0.18.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/OSUrobotics/lpy_treesim"

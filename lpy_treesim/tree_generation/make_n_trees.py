@@ -83,10 +83,15 @@ def export_hierarchy(branch_hierarchy: dict, filepath: str, verbose: bool):
     for key, branch in branch_hierarchy.items():
         named_hierarchy[key] = []
         for child in branch:
-            named_hierarchy[key].append(child.name)
+            start = child.location.start
+            end = child.location.end
+            named_hierarchy[key].append({"name": child.name, "start": convert_vec3_to_tuple(start), "end": convert_vec3_to_tuple(end)})
     json.dump(named_hierarchy, open(filepath, 'w'), indent=4)
     if verbose:
         print(f"INFO: Exported branch hierarchy to {filepath}")
+
+def convert_vec3_to_tuple(vec3) -> tuple:
+    return (vec3[0], vec3[1], vec3[2])
 
 
 def main():

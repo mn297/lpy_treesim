@@ -57,6 +57,7 @@ pruning_interval_iterations = simulation_config.num_iteration_prune
 main_trunk.tying.guide_target = trellis_support.trunk_wire
 
 # Track parent/child relationships for tying/pruning decisions.
+branch_hierarchy["root"] = [main_trunk]
 branch_hierarchy[main_trunk.name] =[]
 
 # Use extern-provided labeling flags (set via command-line arguments in make_n_trees.py)
