@@ -209,8 +209,43 @@ class TreeSimulationBase(ABC):
             energy_matrix[branch_idx, :] = np.inf
             # Set entire column (wire) to infinity - this wire can't accept more branches
             energy_matrix[:, wire_id] = np.inf
+
+
+    def remove_children_from_hierarchy(self, branch_name, branch_hierarchy, color_manager, parent_map):
+        """
+        Remove all children of a given branch from the hierarchy and parent map.
+
+        This function is used during pruning to ensure that when a branch is pruned,
+        all of its descendant branches are also removed from the branch hierarchy
+        and the parent mapping. This prevents dangling references to pruned branches.
+
+        Args:
+            branch_name: Name of the branch whose children are to be removed
+            branch_hierarchy: Dictionary mapping parent branch names to lists of child branches
+            color_manager: ColorManager instance to remove color assignments
+            parent_map: Dictionary mapping child branch names to their parent branch names
+        Returns:
+            None: Modifies branch_hierarchy and parent_map in-place
+        """
+        parent_name = parent_map.get(branch_name)
+        
+        if parent_name and parent_name in branch_hierarchy:
+            # Remove the branch from its parent's children list
+            children = branch_hierarchy[parent_name]
+            branch_hierarchy[parent_name] = [child for child in children if child.name != branch_name]
+        
+        # Recursively remove all children of the branch first
+        if branch_name in branch_hierarchy:
+            for child_branch in branch_hierarchy[branch_name]:
+                self.remove_children_from_hierarchy(child_branch.name, branch_hierarchy, color_manager, parent_map)
+            del branch_hierarchy[branch_name]
+        
+        # Remove branch and its children from parent_map
+        if parent_map and branch_name in parent_map:
+            del parent_map[branch_name]
+
     
-    def prune(self, lstring, branch_hierarchy):
+    def prune(self, lstring, branch_hierarchy, color_manager, parent_map=None):
         """
         Prune old branches that exceed the age threshold and haven't been tied to wires.
 
@@ -228,9 +263,13 @@ class TreeSimulationBase(ABC):
         When a branch meets all criteria, it is:
         - Marked as cut (to prevent re-processing)
         - Removed from the L-System string using cut_from()
+        - Removed from parent's children list (if parent_map provided)
 
         Args:
             lstring: The current L-System string containing modules and their parameters
+            branch_hierarchy: Dictionary mapping branch names to lists of child branches
+            parent_map: Optional dictionary mapping child branch names to parent branch names
+                       for efficient removal from parent's children list
 
         Returns:
             bool: True if a branch was pruned, False if no eligible branches found
@@ -260,7 +299,10 @@ class TreeSimulationBase(ABC):
 
                     # Remove the branch from the L-System string
                     lstring = cut_from(position, lstring)
-                    del branch_hierarchy[branch.name] #Can also search the hierarchy to remove the places where this is a child
+                    
+                    # Remove branch and its children from hierarchy and color manager
+                    if parent_map is not None:
+                        self.remove_children_from_hierarchy(branch.name, branch_hierarchy, color_manager, parent_map)
 
                     return True
 

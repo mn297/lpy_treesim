@@ -111,9 +111,13 @@ def visualize_mesh_with_hierarchy(ply_path, json_path, show_arrows=False, sphere
     for branch_name, start, end in points:
         if total_spheres >= max_spheres:
             break
-            
+
+       
         # Determine branch type from name
         branch_type = branch_name.split('_')[0]
+        # if branch_type != "Spur":
+        #     continue
+            
         if branch_type in point_groups:
             # Add both start and end positions
             point_groups[branch_type].append(start)
@@ -125,8 +129,6 @@ def visualize_mesh_with_hierarchy(ply_path, json_path, show_arrows=False, sphere
     for branch_type, positions in point_groups.items():
         if not positions:
             continue
-        if branch_type != 'Branch':
-            continue  # Limit to Branch type for clarity
         
         color = color_map.get(branch_type, [0.5, 0.5, 0.5])
         

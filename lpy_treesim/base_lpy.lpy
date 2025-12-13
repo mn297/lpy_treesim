@@ -58,6 +58,9 @@ main_trunk.tying.guide_target = trellis_support.trunk_wire
 
 # Track parent/child relationships for tying/pruning decisions.
 branch_hierarchy["root"] = [main_trunk]
+# branch_hierarchy: dict[str, list] maps parent name to list of child branch objects
+# parent_map: dict[str, str] maps child name to parent name for O(1) parent lookup during pruning
+parent_map = {}  # Internal bookkeeping for efficient parent lookup
 branch_hierarchy[main_trunk.name] =[]
 
 # Use extern-provided labeling flags (set via command-line arguments in make_n_trees.py)
@@ -92,7 +95,7 @@ def _tie(lstring, _config):
 
 
 def _prune(lstring, branch_hierarchy, _config):
-  return simulation.prune(lstring, branch_hierarchy)
+  return simulation.prune(lstring, branch_hierarchy, color_manager, parent_map)
 
 # L-Py callbacks delegate to the Python helpers so architectures share logic.
 def StartEach(lstring):
@@ -225,8 +228,9 @@ bud(bud_parameters, hierarchy) :
      # Branch creation failed - terminate
      produce *
    # Register new branch in parent-child relationship tracking
-   branch_hierarchy[new_branch.name] = []
-   branch_hierarchy[bud_parameters.type.name].append(new_branch)
+   branch_hierarchy[new_branch.name] = []  # Initialize empty children list for new branch
+   branch_hierarchy[bud_parameters.type.name].append(new_branch)  # Add to parent's children
+   parent_map[new_branch.name] = bud_parameters.type.name  # Map child to parent for efficient lookup
    # Update branch counters
    bud_parameters.num_buds+=1
    bud_parameters.type.info.num_branches+=1
