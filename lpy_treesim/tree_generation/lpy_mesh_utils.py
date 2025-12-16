@@ -2,7 +2,7 @@
 # PlantGL -> PLY
 def write(fname, scene):
 
-    """ Write an OBJ file from a plantGL scene graph.
+    """ Write a PLY file from a plantGL scene graph.
     This method will convert a PlantGL scene graph into an OBJ file.
     It does not manage  materials correctly yet.
     :Examples:
@@ -38,19 +38,19 @@ def write(fname, scene):
             counter += n
 
     header = '''ply
-format ascii 1.0
-comment author abhinav
-comment File Generated with PlantGL 3D Viewer
-element vertex {}
-property float x
-property float y
-property float z
-property uchar red
-property uchar green
-property uchar blue
-element face {}
-property list uchar int vertex_indices 
-end_header'''.format(len(vertices), len(faces))
+                format ascii 1.0
+                comment author abhinav
+                comment File Generated with PlantGL 3D Viewer
+                element vertex {}
+                property float x
+                property float y
+                property float z
+                property uchar red
+                property uchar green
+                property uchar blue
+                element face {}
+                property list uchar int vertex_indices 
+                end_header'''.format(len(vertices), len(faces))
     f.write(header + '\n')
     for pt, color in vertices:
         r, g, b = color
@@ -63,7 +63,7 @@ end_header'''.format(len(vertices), len(faces))
         f.write('\n')
 
     f.close()
-
+    return
 
 def convert_ply_to_ext(in_path, out_path):
     import pymeshlab
