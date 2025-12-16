@@ -167,3 +167,4 @@ dataset*/
 GEMINI.md
 .vscode/
 *.obj
+log/*
