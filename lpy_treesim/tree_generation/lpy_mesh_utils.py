@@ -1,8 +1,6 @@
-
 # PlantGL -> PLY
 def write(fname, scene):
-
-    """ Write a PLY file from a plantGL scene graph.
+    """Write a PLY file from a plantGL scene graph.
     This method will convert a PlantGL scene graph into an OBJ file.
     It does not manage  materials correctly yet.
     :Examples:
@@ -14,7 +12,7 @@ def write(fname, scene):
 
     # print("Write "+fname)
     d = alg.Discretizer()
-    f = open(fname, 'w')
+    f = open(fname, "w")
 
     vertices = []  # List of point List
     faces = []  # list  of tuple (offset,index List)
@@ -37,39 +35,44 @@ def write(fname, scene):
                     faces.append(j)
             counter += n
 
-    header = '''ply
-                format ascii 1.0
-                comment author abhinav
-                comment File Generated with PlantGL 3D Viewer
-                element vertex {}
-                property float x
-                property float y
-                property float z
-                property uchar red
-                property uchar green
-                property uchar blue
-                element face {}
-                property list uchar int vertex_indices 
-                end_header'''.format(len(vertices), len(faces))
-    f.write(header + '\n')
+    header = """ply
+format ascii 1.0
+comment author abhinav
+comment File Generated with PlantGL 3D Viewer
+element vertex {}
+property float x
+property float y
+property float z
+property uchar red
+property uchar green
+property uchar blue
+element face {}
+property list uchar int vertex_indices 
+end_header""".format(
+        len(vertices), len(faces)
+    )
+    f.write(header + "\n")
     for pt, color in vertices:
         r, g, b = color
         x, y, z = pt
-        f.write('{:.4f} {:.4f} {:.4f} {:.0f} {:.0f} {:.0f}\n'.format(x, y, z, r, g, b))
+        f.write("{:.4f} {:.4f} {:.4f} {:.0f} {:.0f} {:.0f}\n".format(x, y, z, r, g, b))
     for face in faces:
-        f.write('{:.0f}'.format(len(face)))
+        f.write("{:.0f}".format(len(face)))
         for a in face:
-            f.write(' {}'.format(a))
-        f.write('\n')
+            f.write(" {}".format(a))
+        f.write("\n")
 
     f.close()
     return
 
+
 def convert_ply_to_ext(in_path, out_path):
     import pymeshlab
+
     ms = pymeshlab.MeshSet()
     ms.load_new_mesh(in_path)
     ms.save_current_mesh(out_path)
+
 
 # def convert_ply_to_x3d(in_path, out_path):
 #     import pymeshlab
