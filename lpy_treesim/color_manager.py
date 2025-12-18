@@ -11,7 +11,7 @@ import json
 
 class ColorManager:
     """Manages assignment of unique colors to named entities."""
-    
+
     def __init__(self):
         self.color_to_name = {}
         self.name_to_color = {}
@@ -23,10 +23,10 @@ class ColorManager:
         """Get a unique RGB color tuple for the given name."""
         if name in self.name_to_color and if_exists:
             return self.name_to_color[name]
-        
+
         if self.color_pointer >= len(self.all_colors):
             raise ValueError("Ran out of unique colors!")
-        
+
         unique_color = self.all_colors[self.color_pointer]
         self.color_pointer += 1
 
@@ -36,18 +36,27 @@ class ColorManager:
 
         return unique_color
 
-    def export_mapping(self, filename):
+    def export_mapping_dict(self) -> str:
+        """Export color -> name mapping as JSON string."""
+        export_dict = {}
+        for color, name in self.color_to_name.items():
+            export_dict[str(color)] = {"part_name": name.lower().strip()}
+        return export_dict
+
+    def export_mapping_json(self, filename: str) -> None:
         """Export color -> name mapping to JSON"""
         export_dict = {}
         for color, name in self.color_to_name.items():
-            export_dict[str(color)] = {"part_name": name}
+            export_dict[str(color)] = {"part_name": name.lower().strip()}
 
         with open(filename, "w") as f:
             json.dump(export_dict, f, indent=4)
 
         print(f"Exported color mappings to {filename}")
+        return
 
     def set_unique_color(self, color, name):
         """Set a specific color for a given name."""
         self.name_to_color[name] = color
         self.color_to_name[color] = name
+        return
