@@ -4,7 +4,7 @@ import numpy as np
 from pathlib import Path
 import secrets
 
-from lpy_treesim.tree_generation.l_systems_builder import LSystemBuilder, TreeNamingConfig
+from lpy_treesim.tree_generation.tree_builder import TreeBuilder, TreeNamingConfig
 import lpy_treesim.tree_generation.lpy_mesh_utils as lmu
 
 import logging
@@ -47,7 +47,7 @@ def main():
     tree_rng: np.random.Generator = np.random.default_rng(seed=args.dataset_seed)
     for index in range(args.num_trees):
         tree_seed = tree_rng.integers(low=0, high=1_000_000)
-        lsb = LSystemBuilder(
+        lsb = TreeBuilder(
             tree_name=args.tree_name,
             seed_value=tree_seed,
             semantic_label=args.semantic_label,

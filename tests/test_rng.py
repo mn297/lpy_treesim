@@ -4,8 +4,8 @@ import os
 import plyfile
 import pytest
 
-from lpy_treesim.tree_generation.l_systems_builder import LSystemBuilder
-from lpy_treesim.tree_generation.l_systems_builder import TreeNamingConfig
+from lpy_treesim.tree_generation.tree_builder import TreeBuilder
+from lpy_treesim.tree_generation.tree_builder import TreeNamingConfig
 import lpy_treesim.tree_generation.lpy_mesh_utils as lmu
 
 import logging
@@ -16,9 +16,9 @@ logger = logging.getLogger(__name__)
 #     seed = 12345
 #     tree_name = "UFO"
 
-#     lsb1 = LSystemBuilder(tree_name=tree_name, seed_value=seed)
+#     lsb1 = TreeBuilder(tree_name=tree_name, seed_value=seed)
 #     lstring1, scene1 = lsb1.generate_tree()
-#     lsb2 = LSystemBuilder(tree_name=tree_name, seed_value=seed)
+#     lsb2 = TreeBuilder(tree_name=tree_name, seed_value=seed)
 #     lstring2, scene2 = lsb2.generate_tree()
 #     print(lstring1.to_string())
 #     assert hashlib.sha256(str(lstring1).encode('utf-8')).digest() == hashlib.sha256(str(lstring2).encode('utf-8')).digest(), "L-strings do not match for the same seed"
@@ -30,9 +30,9 @@ logger = logging.getLogger(__name__)
 #     seed2 = 54321
 #     tree_name = "UFO"
 
-#     lsb1 = LSystemBuilder(tree_name=tree_name, seed_value=seed1)
+#     lsb1 = TreeBuilder(tree_name=tree_name, seed_value=seed1)
 #     lstring1, scene1 = lsb1.generate_tree()
-#     lsb2 = LSystemBuilder(tree_name=tree_name, seed_value=seed2)
+#     lsb2 = TreeBuilder(tree_name=tree_name, seed_value=seed2)
 #     lstring2, scene2 = lsb2.generate_tree()
 
 #     assert lstring1 != lstring2, "L-strings should differ for different seeds"
@@ -46,14 +46,14 @@ def test_deterministic_ply_generation():
     os.makedirs(output_dir, exist_ok=True)
     naming = TreeNamingConfig(namespace="lpy", tree_type=tree_name)
 
-    lsb1 = LSystemBuilder(tree_name=tree_name, seed_value=seed)
-    lstring1, scene1 = lsb1.generate_tree()
+    tb1 = TreeBuilder(tree_name=tree_name, seed_value=seed)
+    lstring1, scene1 = tb1.generate_tree()
     # PLY
     mesh_path = os.path.join(output_dir, naming.mesh_filename(index=0))
     lmu.write(str(mesh_path), scene1)
 
-    lsb2 = LSystemBuilder(tree_name=tree_name, seed_value=seed)
-    lstring2, scene2 = lsb2.generate_tree()
+    tb2 = TreeBuilder(tree_name=tree_name, seed_value=seed)
+    lstring2, scene2 = tb2.generate_tree()
     # PLY
     mesh_path2 = os.path.join(output_dir, naming.mesh_filename(index=1))
     lmu.write(str(mesh_path2), scene2)

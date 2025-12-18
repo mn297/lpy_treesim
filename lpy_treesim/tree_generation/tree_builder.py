@@ -50,7 +50,7 @@ class TreeNamingConfig:
         return f"{self._prefix(index)}_hierarchy.json"
 
 
-class LSystemBuilder:
+class TreeBuilder:
     def __init__(
         self,
         tree_name: str,
