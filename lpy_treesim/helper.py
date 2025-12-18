@@ -14,10 +14,18 @@ The functions in this module are used by various tree architecture implementatio
 optimization, and geometric shape generation for realistic tree modeling.
 """
 
-from openalea.plantgl.all import NurbsCurve, Vector3, Vector4, Point4Array, Point2Array, Point3Array, Polyline2D, BezierCurve, BezierCurve2D
+from openalea.plantgl.all import (
+    NurbsCurve,
+    Vector3,
+    Vector4,
+    Point4Array,
+    Point2Array,
+    Point3Array,
+    Polyline2D,
+    BezierCurve,
+    BezierCurve2D,
+)
 from openalea.lpy import Lsystem, newmodule
-from random import uniform, seed
-from numpy import linspace, pi, sin, cos
 import numpy as np
 from typing import Callable, Dict, Iterable
 import importlib
@@ -40,8 +48,9 @@ def cut_from(pruning_position, lstring, lsystem_path=None):
         Modified L-System string with cut marker inserted
     """
     # Insert cut marker (%) after the pruning position
-    lstring.insertAt(pruning_position + 1, newmodule('%'))
+    lstring.insertAt(pruning_position + 1, newmodule("%"))
     return lstring
+
 
 def cut_using_string_manipulation(pruning_position, lstring, lsystem_path=None):
     """
@@ -69,9 +78,9 @@ def cut_using_string_manipulation(pruning_position, lstring, lsystem_path=None):
 
     # Traverse the string until we find the matching closing bracket
     while search_position < total_length:
-        if lstring[current_position].name == '[':
+        if lstring[current_position].name == "[":
             bracket_balance += 1
-        elif lstring[current_position].name == ']':
+        elif lstring[current_position].name == "]":
             if bracket_balance == 0:
                 # Found the matching closing bracket, stop here
                 break
@@ -109,8 +118,9 @@ def angle_between(angle, min_angle, max_angle):
     """
     offset_angle = angle + 90
     return min_angle <= offset_angle <= max_angle
-  
-def generate_random_offset(radius):
+
+
+def generate_random_offset(radius: float, rng: np.random.Generator) -> float:
     """
     Generate a random offset value within a specified radius range.
 
@@ -123,9 +133,10 @@ def generate_random_offset(radius):
     Returns:
         float: Random value between -radius and +radius
     """
-    return uniform(-radius, radius)
+    return rng.uniform(-radius, radius)
 
-def generate_noisy_branch_curve(radius, num_control_points=20):
+
+def generate_noisy_branch_curve(radius: float, rng: np.random.Generator, num_control_points: int = 20):
     """
     Generate a NURBS curve representing a noisy branch shape.
 
@@ -141,20 +152,26 @@ def generate_noisy_branch_curve(radius, num_control_points=20):
         NurbsCurve: PlantGL NURBS curve object representing the noisy branch
     """
     # Create control points with progressive noise
-    control_points = [(0, 0, 0, 1), (0, 0, 1/float(num_control_points-1), 1)]
+    control_points = [(0, 0, 0, 1), (0, 0, 1 / float(num_control_points - 1), 1)]
 
     for point_index in range(2, num_control_points):
         t = point_index / float(num_control_points - 1)
         noise_scale = radius * 2  # amplitude scaling factor
 
-        x_noise = generate_random_offset(noise_scale)
-        y_noise = generate_random_offset(noise_scale)
+        x_noise = generate_random_offset(radius=noise_scale, rng=rng)
+        y_noise = generate_random_offset(radius=noise_scale, rng=rng)
 
         control_points.append((x_noise, y_noise, t, 1))
 
-    return NurbsCurve(control_points, degree=min(num_control_points-1, 3), stride=num_control_points*100)
+    return NurbsCurve(control_points, degree=min(num_control_points - 1, 3), stride=num_control_points * 100)
 
-def create_noisy_branch_contour(radius, noise_factor, num_points=100, seed_value=None):
+
+def create_noisy_branch_contour(
+    radius,
+    noise_factor,
+    rng: np.random.Generator,
+    num_points=100,
+):
     """
     Create a noisy 2D contour for branch cross-sections.
 
@@ -171,21 +188,19 @@ def create_noisy_branch_contour(radius, noise_factor, num_points=100, seed_value
     Returns:
         Polyline2D: PlantGL 2D polyline representing the noisy contour
     """
-    if seed_value is not None:
-        seed(seed_value)
 
     # Generate angles around the circle
-    angles = linspace(0, 2 * pi, num_points, endpoint=False)
+    angles = np.linspace(0, 2 * np.pi, num_points, endpoint=False)
     contour_points = []
 
     for angle in angles:
         # Calculate base circle coordinates
-        x_base = radius * cos(angle)
-        y_base = radius * sin(angle)
+        x_base = radius * np.cos(angle)
+        y_base = radius * np.sin(angle)
 
         # Add noise to create irregular shape
-        x_noise = uniform(-noise_factor, noise_factor)
-        y_noise = uniform(-noise_factor, noise_factor)
+        x_noise = rng.uniform(-noise_factor, noise_factor)
+        y_noise = rng.uniform(-noise_factor, noise_factor)
 
         x_noisy = x_base + x_noise
         y_noisy = y_base + y_noise
@@ -199,7 +214,10 @@ def create_noisy_branch_contour(radius, noise_factor, num_points=100, seed_value
     point_array = Point2Array(contour_points)
     return Polyline2D(point_array)
 
-def create_bezier_curve(num_control_points=6, x_range=(-2, 2), y_range=(-2, 2), z_range=(0, 10), seed_value=None):
+
+def create_bezier_curve(
+    num_control_points=6, x_range=(-2, 2), y_range=(-2, 2), z_range=(0, 10), rng: np.random.Generator = None
+) -> BezierCurve:
     """
     Create a randomized 3D Bezier curve for growth guidance.
 
@@ -217,16 +235,14 @@ def create_bezier_curve(num_control_points=6, x_range=(-2, 2), y_range=(-2, 2), 
     Returns:
         BezierCurve: PlantGL Bezier curve object for growth guidance
     """
-    if seed_value is not None:
-        seed(seed_value)
 
     # Generate control points with progressive z-coordinates
-    z_values = linspace(z_range[0], z_range[1], num_control_points)
+    z_values = np.linspace(z_range[0], z_range[1], num_control_points)
     control_points = []
 
     for z_value in z_values:
-        x_coord = uniform(x_range[0], x_range[1])
-        y_coord = uniform(y_range[0], y_range[1])
+        x_coord = rng.uniform(x_range[0], x_range[1])
+        y_coord = rng.uniform(y_range[0], y_range[1])
         control_points.append(Vector4(x_coord, y_coord, z_value, 1))
 
     # Create PlantGL Bezier curve
@@ -236,8 +252,7 @@ def create_bezier_curve(num_control_points=6, x_range=(-2, 2), y_range=(-2, 2), 
 
 def should_bud(plant_segment, simulation_config):
     """Determine if a plant segment should produce a bud"""
-    return np.isclose(plant_segment.info.age % plant_segment.bud_spacing_age, 0, 
-                        atol=simulation_config.tolerance)
+    return np.isclose(plant_segment.info.age % plant_segment.bud_spacing_age, 0, atol=simulation_config.tolerance)
 
 
 def start_each_common(
@@ -298,6 +313,6 @@ def end_each_common(
 
 def resolve_attr(path: str):
     """Import a fully qualified attribute path."""
-    pkg_path, attr_name = path.rsplit('.', 1)
+    pkg_path, attr_name = path.rsplit(".", 1)
     pkg = importlib.import_module(pkg_path)
     return getattr(pkg, attr_name)
