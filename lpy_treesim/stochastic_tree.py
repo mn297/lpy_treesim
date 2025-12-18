@@ -7,7 +7,6 @@ from openalea.plantgl.all import *
 import copy
 import numpy as np
 from openalea.plantgl.scenegraph.cspline import CSpline
-import random as rd
 from lpy_treesim.helper import create_noisy_branch_contour
 import collections
 from dataclasses import dataclass
@@ -99,6 +98,7 @@ class BasicWoodConfig:
     prunable: bool = True
     name: str = None
     bud_spacing_age: int = 2  # Age interval for bud creation
+    rng: np.random.Generator = None
 
     # Curve parameters for L-System growth guides
     curve_x_range: tuple = (-0.5, 0.5)  # X bounds for Bezier curve control points
@@ -149,6 +149,7 @@ class BasicWood(ABC):
             curve_y_range = config.curve_y_range
             curve_z_range = config.curve_z_range
             cylinder_length = config.cylinder_length
+            self.rng = config.rng
         elif copy_from is None:
             raise ValueError("config must be provided when copy_from is None")
 
@@ -421,7 +422,6 @@ class TreeBranch(BasicWood):
         name: str = None,
         contour_params: tuple = (1, 0.2, 30),
     ):
-
         # Validate parameters
         if copy_from is None and config is None:
             raise ValueError("Either 'config' or 'copy_from' must be provided")

@@ -6,7 +6,6 @@ import os
 import sys
 import time
 import numpy as np
-import random as rd
 
 
 
@@ -26,7 +25,7 @@ from dataclasses import dataclass
 # architecture without editing this shared file.
 extern(
   color_manager = None,
-  prototype_dict_path = "examples.Envy.Envy_prototypes.basicwood_prototypes",
+  prototype_builder_path = "examples.Envy.Envy_prototypes.build_basicwood_prototypes",
   trunk_class_path = "examples.Envy.Envy_prototypes.Trunk",
   simulation_config_class_path = "examples.Envy.Envy_simulation.EnvySimulationConfig",
   simulation_class_path = "examples.Envy.Envy_simulation.EnvySimulation",
@@ -39,7 +38,12 @@ extern(
   seed_value = None,
 )# Resolve extern-provided dotted paths so the rest of the script can operate on
 # concrete classes/functions exactly like the Envy/UFO drivers do.
-basicwood_prototypes = resolve_attr(prototype_dict_path)
+
+# Generator
+lpy_rng = np.random.default_rng(seed=seed_value)
+
+prototype_builder_fn = resolve_attr(prototype_builder_path)
+basicwood_prototypes = prototype_builder_fn(rng=lpy_rng)
 Trunk = resolve_attr(trunk_class_path)
 SimulationConfigClass = resolve_attr(simulation_config_class_path)
 SimulationClass = resolve_attr(simulation_class_path)
@@ -48,8 +52,7 @@ simulation_config = SimulationConfigClass()
 simulation = SimulationClass(simulation_config)
 main_trunk = Trunk(copy_from = basicwood_prototypes['trunk'])
 
-# Generator
-lpy_rng = np.random.default_rng(seed=seed_value)
+
 
 # Build trellis geometry and cadence numbers up front so callbacks stay simple.
 trellis_support = Support(

@@ -14,7 +14,7 @@ class Spur(TreeBranch):
     def is_bud_break(self, num_buds_segment):
         if num_buds_segment >= self.growth.max_buds_segment:
             return False
-        return rd.random() < 0.1 * (1 - num_buds_segment / self.growth.max_buds_segment)
+        return self.rng.random() < 0.1 * (1 - num_buds_segment / self.growth.max_buds_segment)
 
     def create_branch(self):
         return None
@@ -33,10 +33,10 @@ class Branch(TreeBranch):
     def is_bud_break(self, num_break_buds):
         if num_break_buds >= self.growth.max_buds_segment:
             return False
-        return rd.random() < 0.5 * (1 - num_break_buds / self.growth.max_buds_segment)
+        return self.rng.random() < 0.5 * (1 - num_break_buds / self.growth.max_buds_segment)
 
     def create_branch(self):
-        if rd.random() > 0.8:
+        if self.rng.random() > 0.8:
             new_ob = NonTrunk(copy_from=self.prototype_dict["nontrunk"])
         else:
             new_ob = Spur(copy_from=self.prototype_dict["spur"])
@@ -58,12 +58,12 @@ class Trunk(TreeBranch):
     def is_bud_break(self, num_buds_segment):
         if num_buds_segment >= self.growth.max_buds_segment:
             return False
-        if rd.random() > 0.1 * (1 - num_buds_segment / self.growth.max_buds_segment):
+        if self.rng.random() > 0.1 * (1 - num_buds_segment / self.growth.max_buds_segment):
             return False
         return True
 
     def create_branch(self):
-        if rd.random() > 0.8:
+        if self.rng.random() > 0.8:
             return Spur(copy_from=self.prototype_dict["spur"])
         else:
             return Branch(copy_from=self.prototype_dict["branch"])
@@ -82,10 +82,10 @@ class NonTrunk(TreeBranch):
     def is_bud_break(self, num_buds_segment):
         if num_buds_segment >= self.growth.max_buds_segment:
             return False
-        return rd.random() < 0.5 * (1 - num_buds_segment / self.growth.max_buds_segment)
+        return self.rng.random() < 0.5 * (1 - num_buds_segment / self.growth.max_buds_segment)
 
     def create_branch(self):
-        if rd.random() > 0.3:
+        if self.rng.random() > 0.3:
             return None
         else:
             new_ob = Spur(copy_from=self.prototype_dict["spur"])
@@ -98,76 +98,82 @@ class NonTrunk(TreeBranch):
         return None
 
 
-# growth_length = 0.1
-basicwood_prototypes = {}
 
-# Create configs for cleaner prototype setup
-spur_config = BasicWoodConfig(
-    max_buds_segment=5,
-    tie_axis=None,
-    max_length=0.2,
-    thickness=0.003,
-    growth_length=0.05,
-    cylinder_length=0.05,
-    thickness_increment=0.0,
-    color=[0, 255, 0],
-    bud_spacing_age=2,
-    curve_x_range=(-0.2, 0.2),
-    curve_y_range=(-0.2, 0.2),
-    curve_z_range=(-1, 1),
-    prunable=True,
-)
+def build_basicwood_prototypes(rng: np.random.Generator):
+    # growth_length = 0.1
+    basicwood_prototypes = {}
+    # Create configs for cleaner prototype setup
+    spur_config = BasicWoodConfig(
+        max_buds_segment=5,
+        tie_axis=None,
+        max_length=0.2,
+        thickness=0.003,
+        growth_length=0.05,
+        cylinder_length=0.05,
+        thickness_increment=0.0,
+        color=[0, 255, 0],
+        bud_spacing_age=2,
+        curve_x_range=(-0.2, 0.2),
+        curve_y_range=(-0.2, 0.2),
+        curve_z_range=(-1, 1),
+        prunable=True,
+        rng=rng
+    )
 
-branch_config = BasicWoodConfig(
-    max_buds_segment=2,
-    tie_axis=(1, 0, 0),
-    max_length=2.2,
-    thickness=0.01,
-    growth_length=0.1,
-    cylinder_length=0.05,
-    thickness_increment=0.00001,
-    color=[255, 150, 0],
-    bud_spacing_age=2,
-    curve_x_range=(-0.5, 0.5),
-    curve_y_range=(-0.5, 0.5),
-    curve_z_range=(-1, 1),
-    prunable=True,
-)
+    branch_config = BasicWoodConfig(
+        max_buds_segment=2,
+        tie_axis=(1, 0, 0),
+        max_length=2.2,
+        thickness=0.01,
+        growth_length=0.1,
+        cylinder_length=0.05,
+        thickness_increment=0.00001,
+        color=[255, 150, 0],
+        bud_spacing_age=2,
+        curve_x_range=(-0.5, 0.5),
+        curve_y_range=(-0.5, 0.5),
+        curve_z_range=(-1, 1),
+        prunable=True,
+        rng=rng
+    )
 
-trunk_config = BasicWoodConfig(
-    max_buds_segment=5,
-    tie_axis=None,
-    max_length=4,
-    thickness=0.01,
-    growth_length=0.1,
-    cylinder_length=0.05,
-    thickness_increment=0.00001,
-    color=[255, 0, 0],
-    bud_spacing_age=2,
-    curve_x_range=(-1, 1),
-    curve_y_range=(-0.15, 0.15),
-    curve_z_range=(0, 10),
-    prunable=False,
-)
+    trunk_config = BasicWoodConfig(
+        max_buds_segment=5,
+        tie_axis=None,
+        max_length=4,
+        thickness=0.01,
+        growth_length=0.1,
+        cylinder_length=0.05,
+        thickness_increment=0.00001,
+        color=[255, 0, 0],
+        bud_spacing_age=2,
+        curve_x_range=(-1, 1),
+        curve_y_range=(-0.15, 0.15),
+        curve_z_range=(0, 10),
+        prunable=False,
+        rng=rng
+    )
 
-nontrunk_config = BasicWoodConfig(
-    max_buds_segment=5,
-    tie_axis=None,
-    max_length=0.3,
-    thickness=0.003,
-    growth_length=0.05,
-    cylinder_length=0.05,
-    thickness_increment=0.00001,
-    color=[0, 255, 0],
-    bud_spacing_age=2,
-    curve_x_range=(-0.5, 0.5),
-    curve_y_range=(-0.5, 0.5),
-    curve_z_range=(-1, 1),
-    prunable=True,
-)
+    nontrunk_config = BasicWoodConfig(
+        max_buds_segment=5,
+        tie_axis=None,
+        max_length=0.3,
+        thickness=0.003,
+        growth_length=0.05,
+        cylinder_length=0.05,
+        thickness_increment=0.00001,
+        color=[0, 255, 0],
+        bud_spacing_age=2,
+        curve_x_range=(-0.5, 0.5),
+        curve_y_range=(-0.5, 0.5),
+        curve_z_range=(-1, 1),
+        prunable=True,
+        rng=rng
+    )
 
-# Setup prototypes using configs
-basicwood_prototypes["spur"] = Spur(config=spur_config, prototype_dict=basicwood_prototypes)
-basicwood_prototypes["branch"] = Branch(config=branch_config, prototype_dict=basicwood_prototypes)
-basicwood_prototypes["trunk"] = Trunk(config=trunk_config, prototype_dict=basicwood_prototypes)
-basicwood_prototypes["nontrunk"] = NonTrunk(config=nontrunk_config, prototype_dict=basicwood_prototypes)
+    # Setup prototypes using configs
+    basicwood_prototypes["spur"] = Spur(config=spur_config, prototype_dict=basicwood_prototypes)
+    basicwood_prototypes["branch"] = Branch(config=branch_config, prototype_dict=basicwood_prototypes)
+    basicwood_prototypes["trunk"] = Trunk(config=trunk_config, prototype_dict=basicwood_prototypes)
+    basicwood_prototypes["nontrunk"] = NonTrunk(config=nontrunk_config, prototype_dict=basicwood_prototypes)
+    return basicwood_prototypes
