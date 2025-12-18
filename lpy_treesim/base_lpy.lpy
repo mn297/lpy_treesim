@@ -49,7 +49,10 @@ simulation = SimulationClass(simulation_config)
 main_trunk = Trunk(copy_from = basicwood_prototypes['trunk'])
 
 # Generator
+
+#TODO: Replace random with numpy random throughout
 lpy_rng = np.random.default_rng(seed=seed_value)
+rd.seed(seed_value)
 
 # Build trellis geometry and cadence numbers up front so callbacks stay simple.
 trellis_support = Support(
