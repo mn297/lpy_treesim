@@ -21,6 +21,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
+    "pytest"
     # Note: openalea.lpy and openalea.plantgl require conda installation
     # See README.rst for setup instructions
 ]

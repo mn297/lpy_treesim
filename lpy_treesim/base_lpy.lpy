@@ -6,7 +6,8 @@ import os
 import sys
 import time
 import numpy as np
-import random as rd
+
+
 
 # Ensure repository root is importable regardless of working directory
 CURRENT_DIR = os.path.dirname(__file__)
@@ -23,20 +24,26 @@ from dataclasses import dataclass
 # Override these externs via Lsystem(..., variables) to point at a specific
 # architecture without editing this shared file.
 extern(
-    color_manager = None,
-    prototype_dict_path = "examples.Envy.Envy_prototypes.basicwood_prototypes",
-    trunk_class_path = "examples.Envy.Envy_prototypes.Trunk",
-    simulation_config_class_path = "examples.Envy.Envy_simulation.EnvySimulationConfig",
-    simulation_class_path = "examples.Envy.Envy_simulation.EnvySimulation",
-    axiom_pitch = 0.0,
-    axiom_yaw = 0.0,
-    branch_hierarchy = {},
-    semantic_label = None,
-    instance_label = None,
-    per_cylinder_label = None,
+  color_manager = None,
+  prototype_builder_path = "examples.Envy.Envy_prototypes.build_basicwood_prototypes",
+  trunk_class_path = "examples.Envy.Envy_prototypes.Trunk",
+  simulation_config_class_path = "examples.Envy.Envy_simulation.EnvySimulationConfig",
+  simulation_class_path = "examples.Envy.Envy_simulation.EnvySimulation",
+  axiom_pitch = 0.0,
+  axiom_yaw = 0.0,
+  branch_hierarchy = {},
+  semantic_label = None,
+  instance_label = None,
+  per_cylinder_label = None,
+  seed_value = None,
 )# Resolve extern-provided dotted paths so the rest of the script can operate on
 # concrete classes/functions exactly like the Envy/UFO drivers do.
-basicwood_prototypes = resolve_attr(prototype_dict_path)
+
+# Generator
+lpy_rng = np.random.default_rng(seed=seed_value)
+
+prototype_builder_fn = resolve_attr(prototype_builder_path)
+basicwood_prototypes = prototype_builder_fn(rng=lpy_rng)
 Trunk = resolve_attr(trunk_class_path)
 SimulationConfigClass = resolve_attr(simulation_config_class_path)
 SimulationClass = resolve_attr(simulation_class_path)
@@ -45,12 +52,14 @@ simulation_config = SimulationConfigClass()
 simulation = SimulationClass(simulation_config)
 main_trunk = Trunk(copy_from = basicwood_prototypes['trunk'])
 
+
+
 # Build trellis geometry and cadence numbers up front so callbacks stay simple.
 trellis_support = Support(
   simulation.generate_points(),
-    simulation_config.support_num_wires,
-    simulation_config.support_spacing_wires,
-    simulation_config.support_trunk_wire_point,
+  simulation_config.support_num_wires,
+  simulation_config.support_spacing_wires,
+  simulation_config.support_trunk_wire_point,
 )
 tying_interval_iterations = simulation_config.num_iteration_tie
 pruning_interval_iterations = simulation_config.num_iteration_prune
@@ -71,10 +80,10 @@ enable_per_cylinder_labeling = per_cylinder_label if per_cylinder_label is not N
 # Validate that at most one labeling option is enabled
 label_options = [enable_semantic_labeling, enable_instance_labeling, enable_per_cylinder_labeling]
 if sum(label_options) > 1:
-    raise ValueError(
-        "Only one of semantic_label, instance_label, or per_cylinder_label "
-        "can be True at a time."
-    )
+  raise ValueError(
+    "Only one of semantic_label, instance_label, or per_cylinder_label "
+    "can be True at a time."
+  )
 
 if (enable_instance_labeling or enable_per_cylinder_labeling) and color_manager is None:
   raise ValueError(
@@ -99,26 +108,26 @@ def _prune(lstring, branch_hierarchy, _config):
 
 # L-Py callbacks delegate to the Python helpers so architectures share logic.
 def StartEach(lstring):
-    """Proxy to shared tying preparation logic."""
-    start_each_common(lstring, branch_hierarchy, trellis_support, main_trunk)
+  """Proxy to shared tying preparation logic."""
+  start_each_common(lstring, branch_hierarchy, trellis_support, main_trunk)
 
 
 def EndEach(lstring):
-    """Proxy to shared tying/pruning orchestration logic."""
-    return end_each_common(
-        lstring,
-        branch_hierarchy,
-        trellis_support,
-        tying_interval_iterations,
-        pruning_interval_iterations,
-        simulation_config,
-        main_trunk,
-        getIterationNb,
-        _get_energy_mat,
-        _decide_guide,
-        _tie,
-        _prune,
-    )
+  """Proxy to shared tying/pruning orchestration logic."""
+  return end_each_common(
+    lstring,
+    branch_hierarchy,
+    trellis_support,
+    tying_interval_iterations,
+    pruning_interval_iterations,
+    simulation_config,
+    main_trunk,
+    getIterationNb,
+    _get_energy_mat,
+    _decide_guide,
+    _tie,
+    _prune,
+  )
 generalized_cylinder = getattr(simulation_config, "use_generalized_cylinder", False)
 # =============================================================================
 # L-SYSTEM GRAMMAR DEFINITION
@@ -142,7 +151,7 @@ module trunk
 # GLOBAL L-SYSTEM PARAMETERS
 # -----------------------------------------------------------------------------
 # Create a growth guide curve for the initial trunk development
-trunk_guide_curve = create_bezier_curve(x_range = (-1, 1), y_range = (-1, 1), z_range = (0, 10), seed_value=time.time())
+trunk_guide_curve = create_bezier_curve(x_range = (-1, 1), y_range = (-1, 1), z_range = (0, 10), rng=lpy_rng)
 
 # -----------------------------------------------------------------------------
 # AXIOM (STARTING STRING)
@@ -165,11 +174,10 @@ derivation length: simulation_config.derivation_length
 # These rules control the growth, branching, and development of the tree.
 
 production:
-
 # GROW_OBJECT PRODUCTION RULE
 # Handles the growth of plant segments (trunk, branches, spurs)
 # Determines whether to continue growing, stop, or produce buds
-grow_object(plant_segment, hierarchy) :
+grow_object(plant_segment, hierarchy):
   if plant_segment == None:
     # Null object - terminate this branch
     produce *
@@ -190,7 +198,7 @@ grow_object(plant_segment, hierarchy) :
       color_manager.set_unique_color((r,g,b), plant_part)  # Ensure part type has a color assig
       nproduce SetColor(r,g,b)
     if enable_instance_labeling:
-        # Instance-level labeling (unique color per branch instance)
+      # Instance-level labeling (unique color per branch instance)
       r, g, b = color_manager.get_unique_color(plant_segment.name)
       nproduce SetColor(r,g,b)
 
@@ -220,8 +228,8 @@ grow_object(plant_segment, hierarchy) :
 # Controls bud break and branch initiation
 # Determines when buds activate to produce new branches
 bud(bud_parameters, hierarchy) :
- if bud_parameters.type.is_bud_break(bud_parameters.num_buds):
-   # Bud break condition met - create new branch
+  if bud_parameters.type.is_bud_break(bud_parameters.num_buds):
+    # Bud break condition met - create new branch
 
    new_branch = bud_parameters.type.create_branch()
    if new_branch == None:
@@ -235,18 +243,18 @@ bud(bud_parameters, hierarchy) :
    bud_parameters.num_buds+=1
    bud_parameters.type.info.num_branches+=1
 
-   nproduce [
-   if generalized_cylinder:
-     nproduce @Gc
-   if hasattr(new_branch, 'curve_x_range'):
-     # Curved branches: set up custom growth guide curve
-     curve = create_bezier_curve(x_range=new_branch.curve_x_range, y_range=new_branch.curve_y_range, z_range=new_branch.curve_z_range, seed_value=rd.randint(0,1000))
-     nproduceSetGuide(curve, new_branch.growth.max_length)
-   # Produce new branch with random orientation and growth object
-   nproduce @RGetPos(new_branch.location.start)WoodStart(ParameterSet(type = new_branch))/(rd.random()*360)&(rd.random()*360)grow_object(new_branch, hierarchy)GetPos(new_branch.location.end)
-   if generalized_cylinder:
-     nproduce @Ge
-   produce ]bud(bud_parameters, hierarchy)
+    nproduce [
+    if generalized_cylinder:
+      nproduce @Gc
+    if hasattr(new_branch, 'curve_x_range'):
+      # Curved branches: set up custom growth guide curve
+      curve = create_bezier_curve(x_range=new_branch.curve_x_range, y_range=new_branch.curve_y_range, z_range=new_branch.curve_z_range, rng=lpy_rng)
+      nproduceSetGuide(curve, new_branch.growth.max_length)
+    # Produce new branch with random orientation and growth object
+    nproduce @RGetPos(new_branch.location.start)WoodStart(ParameterSet(type = new_branch))/(lpy_rng.random()*360)&(lpy_rng.random()*360)grow_object(new_branch, hierarchy)GetPos(new_branch.location.end)
+    if generalized_cylinder:
+      nproduce @Ge
+    produce ]bud(bud_parameters, hierarchy)
 
 trunk(hierarchy):
   if generalized_cylinder:
