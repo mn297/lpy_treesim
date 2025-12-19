@@ -35,6 +35,15 @@ class ColorManager:
         self.color_to_name[unique_color] = name
 
         return unique_color
+    
+    def remove_name(self, name):
+        """Remove a name and its associated color from the manager."""
+        if name in self.name_to_color:
+            print(f"Removing color mapping for name: {name}")
+            color = self.name_to_color[name]
+            del self.name_to_color[name]
+            if color in self.color_to_name:
+                del self.color_to_name[color]
 
     def export_mapping_dict(self) -> str:
         """Export color -> name mapping as JSON string."""
