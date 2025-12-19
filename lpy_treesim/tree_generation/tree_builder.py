@@ -110,14 +110,15 @@ class TreeBuilder:
         }
         # Hierarchy
         export_dict["hierarchy"] = self.export_hierarchy_dict()
+        color_data = self.color_manager.export_mapping_dict()
+        export_dict["color_mapping"] = color_data
         # Label data
         if self.extern_vars["semantic_label"]:
             ...
         if self.extern_vars["instance_label"]:
             ...
         if self.extern_vars["per_cylinder_label"]:
-            cylinder_data = self.color_manager.export_mapping_dict()
-            export_dict["cylinder_data"] = get_cylinder_params(ply_path=ply_filepath, cylinder_metadata=cylinder_data)
+            export_dict["cylinder_data"] = get_cylinder_params(ply_path=ply_filepath, cylinder_metadata=color_data)
         return export_dict
 
     def export_metadata(self, ply_filepath: str, metadata_path: str) -> None:
