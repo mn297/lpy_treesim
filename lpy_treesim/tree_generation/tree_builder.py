@@ -88,7 +88,7 @@ class TreeBuilder:
             self.__lsystem.plot(lstring)
             # input("Press Enter to continue...")
         return lstring, self.__lsystem.sceneInterpretation(lstring)
-
+    
     def export_hierarchy_dict(self) -> dict:
         named_hierarchy = {}
         for key, branch in self.branch_hierarchy.items():
@@ -98,6 +98,18 @@ class TreeBuilder:
                 named_hierarchy[key].append(child.name.lower().strip())
         return named_hierarchy
 
+    @staticmethod
+    def convert_vec3_to_tuple(vec3) -> tuple:
+        return (float(vec3.x), float(vec3.y), float(vec3.z))
+    
+    def export_branch_location_dict(self) -> dict:
+        named_hierarchy = {}
+        for key, branch in self.branch_hierarchy.items():
+            for child in branch:
+                child_name = child.name.lower().strip()
+                named_hierarchy[child_name] = {"start": self.convert_vec3_to_tuple(child.location.start), "end": self.convert_vec3_to_tuple(child.location.end)}
+        return named_hierarchy
+    
     def get_metadata(self, ply_filepath: str, metadata_path: str) -> None:
         """Export metadata based on label settings. Includes hierarchy and L-Py vars."""
         export_dict = {
@@ -110,6 +122,7 @@ class TreeBuilder:
         }
         # Hierarchy
         export_dict["hierarchy"] = self.export_hierarchy_dict()
+        export_dict["branch_locations"] = self.export_branch_location_dict()
         color_data = self.color_manager.export_mapping_dict()
         export_dict["color_mapping"] = color_data
         # Label data
