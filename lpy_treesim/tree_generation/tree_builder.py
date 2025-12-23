@@ -64,8 +64,8 @@ class TreeBuilder:
         self.extern_vars = {
             "prototype_builder_path": f"examples.{tree_name}.{tree_name}_prototypes.build_basicwood_prototypes",
             "trunk_class_path": f"examples.{tree_name}.{tree_name}_prototypes.Trunk",
-            "simulation_config_class_path": f"examples.{tree_name}.{tree_name}_simulation.{tree_name}SimulationConfig",
-            "simulation_class_path": f"examples.{tree_name}.{tree_name}_simulation.{tree_name}Simulation",
+            "simulation_config_class_path": f"examples.{tree_name}.{tree_name}_simulation.{tree_name.upper()}SimulationConfig",
+            "simulation_class_path": f"examples.{tree_name}.{tree_name}_simulation.{tree_name.upper()}Simulation",
             "color_manager": self.color_manager,
             "axiom_pitch": 0.0,
             "axiom_yaw": 0.0,

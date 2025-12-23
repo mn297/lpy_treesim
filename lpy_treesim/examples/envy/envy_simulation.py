@@ -4,7 +4,7 @@ import numpy as np
 
 
 @dataclass
-class EnvySimulationConfig(SimulationConfig):
+class ENVYSimulationConfig(SimulationConfig):
     """Configuration for Envy trellis tree simulation parameters."""
 
     # Override base defaults for Envy-specific values
@@ -26,7 +26,7 @@ class EnvySimulationConfig(SimulationConfig):
     use_generalized_cylinders: bool = False
 
 
-class EnvySimulation(TreeSimulationBase):
+class ENVYSimulation(TreeSimulationBase):
     """
     Envy trellis architecture simulation.
 
