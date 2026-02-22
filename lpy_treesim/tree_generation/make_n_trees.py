@@ -4,11 +4,10 @@ import numpy as np
 from pathlib import Path
 import secrets
 
-from lpy_treesim.tree_generation.tree_builder import TreeBuilder, TreeNamingConfig
-import lpy_treesim.tree_generation.lpy_mesh_utils as lmu
 
 import logging
 import lpy_treesim.utils.logging_conf
+from lpy_treesim.tree_generation.tree_builder import TreeNamingConfig, TreeBuilder
 
 logger = logging.getLogger(__name__)
 

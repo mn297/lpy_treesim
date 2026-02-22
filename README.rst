@@ -64,7 +64,7 @@ To create your first tree using TreeSim_Lpy, in the NoVNC window with the termin
 
 .. code-block:: bash
    
-   python treesim_lpy/tree_generation/make_n_trees.py --num_trees 1 --output_dir ./dataset
+   python lpy_treesim/tree_generation/make_n_trees.py --num-trees 1 --output-dir ./dataset
 
 
 This should create a dataset folder in the current directory with one generated tree mesh in it. It should be available locally on your host machine in the cloned repository folder.
