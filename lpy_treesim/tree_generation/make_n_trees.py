@@ -8,6 +8,7 @@ import secrets
 import logging
 import lpy_treesim.utils.logging_conf
 from lpy_treesim.tree_generation.tree_builder import TreeNamingConfig, TreeBuilder
+from lpy_treesim.tree_generation.convert_ply_to_usd import create_mesh_usd
 import lpy_mesh_utils as lmu
 
 logger = logging.getLogger(__name__)
@@ -62,7 +63,10 @@ def main():
         lstring, scene = lsb.generate_tree()
         # PLY
         mesh_path = args.output_dir / naming.mesh_filename(index)
-        lmu.write(str(mesh_path), scene)
+        usd_path = args.output_dir / naming.usd_filename(index)
+        vs, cs, fs = lmu.plant_gl_scene_to_vertices_and_faces(scene)
+        #lmu.write(str(mesh_path), vs, cs, fs)
+        create_mesh_usd(str(usd_path), vs, cs, fs)
         # Metadata
         metadata_path = args.output_dir / naming.metadata_filename(index)
         lsb.export_metadata(ply_filepath=str(mesh_path), metadata_path=str(metadata_path))

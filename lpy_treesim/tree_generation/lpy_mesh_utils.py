@@ -1,25 +1,21 @@
-# PlantGL -> PLY
-def write(fname, scene):
-    """Write a PLY file from a plantGL scene graph.
-    This method will convert a PlantGL scene graph into an OBJ file.
-    It does not manage  materials correctly yet.
-    :Examples:
-        import openalea.plantgl.scenegraph as sg
-        scene = sg.Scene()"""
-    import openalea.plantgl as plantgl
-    import openalea.plantgl.scenegraph as sg
-    import openalea.plantgl.algo as alg
+import openalea.plantgl as plantgl
+import openalea.plantgl.scenegraph as sg
+import openalea.plantgl.algo as alg
 
-    # print("Write "+fname)
+
+# Convert the PlantGL to a list of vertices and faces
+def plant_gl_scene_to_vertices_and_faces(scene):
+    """ extract vertices and faces from a plantGL scene graph.
+    helper function for creating ply and usd files"""
     d = alg.Discretizer()
-    f = open(fname, "w")
 
     vertices = []  # List of point List
+    colors = []  # List of colors
     faces = []  # list  of tuple (offset,index List)
 
     counter = 0
-    for i in scene:
-        if i.apply(d):
+    for item in scene:
+        if item.apply(d):
             p = d.result
             if isinstance(p, plantgl.scenegraph._pglsg.PointSet):
                 continue
@@ -27,13 +23,29 @@ def write(fname, scene):
             face = p.indexList
             n = len(p.pointList)
             if n > 0:
-                color = i.appearance.diffuseColor()
+                color = item.appearance.diffuseColor()
+                r, g, b = color
                 for j in pts:
-                    vertices.append((j, color))
+                    vertices.append(j)
+                    colors.append((r, g, b))
                 for j in face:
                     j = list(map(lambda x: x + counter, j))
                     faces.append(j)
             counter += n
+    return vertices, colors, faces
+
+
+# PlantGL -> PLY
+def write(fname, vertices, colors, faces):
+    """Write a PLY file from a plantGL scene graph.
+    This method will convert a PlantGL scene graph into an OBJ file.
+    It does not manage  materials correctly yet.
+    :Examples:
+        import openalea.plantgl.scenegraph as sg
+        scene = sg.Scene()"""
+
+    # print("Write "+fname)
+    f = open(fname, "w")
 
     header = """ply
 format ascii 1.0
@@ -52,7 +64,7 @@ end_header""".format(
         len(vertices), len(faces)
     )
     f.write(header + "\n")
-    for pt, color in vertices:
+    for pt, color in zip(vertices, colors):
         r, g, b = color
         x, y, z = pt
         f.write("{:.4f} {:.4f} {:.4f} {:.0f} {:.0f} {:.0f}\n".format(x, y, z, r, g, b))

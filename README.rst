@@ -1,4 +1,4 @@
-============
+which ============
 TreeSim_Lpy
 ============
 
@@ -60,7 +60,7 @@ See the repository Dockerfile for more details about the installed packages and 
 
 Installing (Windows and Linux only)
 -----------------------
-Follow the instructructions to install openalea-meta. Note that you need miniforge (which has mamba)
+Follow the instructions to install openalea-meta. Note that you need miniforge (which has mamba)
 -  "https://github.com/openalea/openalea-meta"
 
 Activate the openalea environmnet
@@ -68,7 +68,7 @@ Activate the openalea environmnet
 
 cd into the lpy_treesim directory and pip install 
 - pip install .
-now you shuld be able to run code as below
+now you should be able to run code as below
 
 Making your first tree
 ----------------------

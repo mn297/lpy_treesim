@@ -202,14 +202,14 @@ grow_object(plant_segment, hierarchy):
       r, g, b = color_manager.get_unique_color(plant_segment.name)
       nproduce SetColor(r,g,b)
 
-    #Produce internode segments (n cylinders per growth step)
+    # Produce internode segments (n cylinders per growth step)
     n_cylinders = int(plant_segment.growth.growth_length / plant_segment.growth.cylinder_length)
     for i in range(n_cylinders):
       if enable_per_cylinder_labeling:
         r, g, b = color_manager.get_unique_color(plant_segment.name, if_exists=False)
         nproduce SetColor(r, g, b)
       nproduce I(plant_segment.growth.cylinder_length, plant_segment.growth.thickness, plant_segment)
-    #Produce bud (after all cylinders in this growth step)
+    # Produce bud (after all cylinders in this growth step)
     if plant_segment.pre_bud_rule(plant_segment, simulation_config):
       for generated in plant_segment.post_bud_rule(plant_segment, simulation_config):
         nproduce new(generated[0], *generated[1])

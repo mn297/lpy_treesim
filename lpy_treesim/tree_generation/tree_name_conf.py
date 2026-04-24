@@ -23,6 +23,9 @@ class TreeNamingConfig:
     def mesh_filename(self, index: int) -> str:
         return f"{self._prefix(index)}.ply"
 
+    def usd_filename(self, index: int) -> str:
+        return f"{self._prefix(index)}.usd"
+
     def color_map_filename(self, index: int) -> str:
         return f"{self._prefix(index)}_metadata.json"
 
