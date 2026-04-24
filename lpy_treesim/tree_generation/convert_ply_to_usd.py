@@ -2,10 +2,27 @@ from pxr import Usd, UsdGeom, Vt
 import ctypes
 
 
+from pxr import Usd, UsdGeom, Gf
+
+
+def create_mesh(stage, path, points, face_vertex_counts, face_vertex_indices):
+    """
+    Helper function to create a USD mesh.
+    """
+    mesh = UsdGeom.Mesh.Define(stage, path)
+    mesh.CreatePointsAttr(points)
+    mesh.CreateFaceVertexCountsAttr(face_vertex_counts)
+    mesh.CreateFaceVertexIndicesAttr(face_vertex_indices)
+    mesh.CreateSubdivisionSchemeAttr(UsdGeom.Tokens.none)
+    return mesh
+
+
 def create_mesh_usd(file_path, vertices, colors, faces):
     # 1. Create a new USD stage
+    # Set the up axis and units
     stage = Usd.Stage.CreateNew(file_path)
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
+    UsdGeom.SetStageMetersPerUnit(stage, 1.0)
 
     # 2. Define the Mesh primitive
     mesh = UsdGeom.Mesh.Define(stage, '/TreeMesh')
@@ -28,6 +45,9 @@ def create_mesh_usd(file_path, vertices, colors, faces):
     color_primvar = mesh.CreateDisplayColorAttr()
     cs = [(col[0] / 255.0, col[1] / 255.0, col[2] / 255.0) for col in colors]
     color_primvar.Set(cs)
+
+    # Example transform
+    # UsdGeom.XformCommonAPI(mesh).SetRotate((0, 0, 25))
 
     # 2. Set Interpolation
     # 'constant' = 1 color for whole mesh
