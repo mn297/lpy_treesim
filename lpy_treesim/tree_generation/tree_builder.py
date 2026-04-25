@@ -24,35 +24,6 @@ BASE_LPY_PATH = Path(__file__).resolve().parents[1] / "base_lpy.lpy"
 sys.path.insert(0, str(BASE_LPY_PATH.parents[0]))
 
 
-MAX_TREES = 99_999
-
-
-@dataclass
-class TreeNamingConfig:
-    def __init__(self, namespace: str, tree_type: str):
-        self.namespace = namespace.lower().strip()
-        self.tree_type = tree_type.lower().strip()
-        return
-
-    def _prefix(self, index: int) -> str:
-        if index > MAX_TREES:
-            logging.error(f"Tree index {index} exceeds maximum supported value {MAX_TREES}.")
-            raise ValueError(f"Tree index {index} exceeds maximum supported value {MAX_TREES}.")
-        return f"{self.namespace}_{self.tree_type}_{index:05d}"
-
-    def mesh_filename(self, index: int) -> str:
-        return f"{self._prefix(index)}.ply"
-
-    def usd_filename(self, index: int) -> str:
-        return f"{self._prefix(index)}.usda"
-
-    def metadata_filename(self, index: int) -> str:
-        return f"{self._prefix(index)}_metadata.json"
-
-    def hierarchy_filename(self, index: int) -> str:
-        return f"{self._prefix(index)}_hierarchy.json"
-
-
 class TreeBuilder:
     def __init__(
         self,
@@ -113,7 +84,7 @@ class TreeBuilder:
                 named_hierarchy[child_name] = {"start": self.convert_vec3_to_tuple(child.location.start), "end": self.convert_vec3_to_tuple(child.location.end)}
         return named_hierarchy
     
-    def get_metadata(self, ply_filepath: str, metadata_path: str) -> None:
+    def get_metadata(self, vs, cs) -> None:
         """Export metadata based on label settings. Includes hierarchy and L-Py vars."""
         export_dict = {
             "seed_value": int(self.extern_vars["seed_value"]),
@@ -134,13 +105,13 @@ class TreeBuilder:
         if self.extern_vars["instance_label"]:
             ...
         if self.extern_vars["per_cylinder_label"]:
-            export_dict["cylinder_data"] = get_cylinder_params(ply_path=ply_filepath, cylinder_metadata=color_data)
+            export_dict["cylinder_data"] = get_cylinder_params(vs, cs, cylinder_metadata=color_data)
         return export_dict
 
-    def export_metadata(self, ply_filepath: str, metadata_path: str) -> None:
+    def export_metadata(self, vs, cs, metadata_path: str) -> None:
         """Export metadata based on label settings. Includes hierarchy and L-Py vars."""
         logger.info(f"Exporting metadata to {metadata_path}...")
-        export_dict = self.get_metadata(ply_filepath, metadata_path)
+        export_dict = self.get_metadata(vs, cs)
         with open(metadata_path, "w") as f:
             json.dump(export_dict, f, indent=4)
         return export_dict

@@ -11,6 +11,7 @@ def plant_gl_scene_to_vertices_and_faces(scene):
 
     vertices = []  # List of point List
     colors = []  # List of colors
+    texture_coords = []
     faces = []  # list  of tuple (offset,index List)
 
     counter = 0
@@ -22,17 +23,21 @@ def plant_gl_scene_to_vertices_and_faces(scene):
             pts = p.pointList
             face = p.indexList
             n = len(p.pointList)
+            n_around = n / 2
             if n > 0:
                 color = item.appearance.diffuseColor()
                 r, g, b = color
-                for j in pts:
+                for v_id, j in enumerate(pts):
                     vertices.append(j)
                     colors.append((r, g, b))
+                    u = (v_id // 2) / (n_around - 1.0)
+                    v = (v_id % 2)
+                    texture_coords.append((u, v))
                 for j in face:
-                    j = list(map(lambda x: x + counter, j))
-                    faces.append(j)
+                    flatten_f = list(map(lambda x: x + counter, j))
+                    faces.append(flatten_f)
             counter += n
-    return vertices, colors, faces
+    return vertices, colors, texture_coords, faces
 
 
 # PlantGL -> PLY

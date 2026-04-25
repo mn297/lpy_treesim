@@ -190,6 +190,19 @@ def generate_hedge(field_boundary, spacing, gaps=None):
         hedge_points.append(pt)
     return hedge_points
 
+"""
+import omni.replicator.core as rep
+
+# Create the render product
+rp = rep.create.render_product("/OmniverseKit_Persp", (1024, 1024))
+
+# Option 1: Render based on the 'category' scheme
+segmentation = rep.AnnotatorRegistry.get_annotator("semantic_segmentation")
+segmentation.initialize(semanticTypes=["category"])
+
+# Option 2: To switch, you would change the semanticTypes to 'part_id'
+# segmentation.initialize(semanticTypes=["part_id"])
+"""
 
 if __name__ == "__main__":
     os.chdir("/Users/grimmc/PycharmProjects/shared_with_OSU/")

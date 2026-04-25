@@ -50,6 +50,22 @@ def parse_ply(ply_path):
     return vertices_by_color
 
 
+def sort_by_color(vs, cs):
+    """
+    Group the vertices by color
+    """
+    vertices_by_color = defaultdict(list)
+
+    for v, c in zip(vs, cs):
+        x, y, z = float(v[0]), float(v[1]), float(v[2])
+        r, g, b = c[0], c[1], c[2]
+
+        color_key = f"({r}, {g}, {b})"
+        vertices_by_color[color_key].append([x, y, z])
+
+    return vertices_by_color
+
+
 def compute_cylinder_params(vertices):
     """
     Computes centroid, radius, and length of a cylinder given its vertices.
@@ -100,8 +116,8 @@ def compute_cylinder_params(vertices):
     return centroid.tolist(), float(radius), float(length), orientation
 
 
-def get_cylinder_params(ply_path: str, cylinder_metadata: dict) -> dict:
-    vertices_by_color = parse_ply(ply_path)
+def get_cylinder_params(vs, cs, cylinder_metadata: dict) -> dict:
+    vertices_by_color = sort_by_color(vs, cs)
     cylinder_params = {}
     for color_key, vertices in vertices_by_color.items():
         centroid, radius, length, orientation = compute_cylinder_params(vertices)

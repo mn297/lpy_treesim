@@ -3,18 +3,17 @@ import argparse
 import numpy as np
 from pathlib import Path
 import secrets
+import os as os
 
 
 import logging
 import lpy_treesim.utils.logging_conf
-from lpy_treesim.tree_generation.tree_builder import TreeNamingConfig, TreeBuilder
-from lpy_treesim.tree_generation.convert_ply_to_usd import create_mesh_usd
+from lpy_treesim.tree_generation.tree_builder import TreeBuilder
+from lpy_treesim.tree_generation.tree_name_conf import TreeNamingConfig
+from lpy_treesim.tree_generation.convert_ply_to_usd import create_mesh_usd, check_texture
 import lpy_mesh_utils as lmu
 
 logger = logging.getLogger(__name__)
-
-MAX_TREES = 99_999
-
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate and save multiple L-Py trees.")
@@ -30,8 +29,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--instance-label", action="store_true", help="Enable instance labeling")
     parser.add_argument("--per-cylinder-label", action="store_true", help="Enable per-cylinder labeling")
     args = parser.parse_args()
-    if args.num_trees > (MAX_TREES + 1) or args.num_trees < 1:
-        raise ValueError(f"num_trees={args.num_trees} is not in the range [1, {MAX_TREES + 1}].")
+    if args.num_trees > (TreeNamingConfig.MAX_TREES + 1) or args.num_trees < 1:
+        raise ValueError(f"num_trees={args.num_trees} is not in the range [1, {TreeNamingConfig.MAX_TREES + 1}].")
     if args.dataset_seed is None:
         args.dataset_seed = secrets.randbits(32)
     return args
@@ -43,6 +42,9 @@ def main():
 
     naming = TreeNamingConfig(namespace=args.namespace, tree_type=args.tree_name)
     # ensure_output_dir(args.output_dir)
+
+    os.chdir("/Users/grimmc/PycharmProjects/shared_with_OSU")
+    check_texture()
 
     # Generate trees
     tree_rng: np.random.Generator = np.random.default_rng(seed=args.dataset_seed)
@@ -64,12 +66,16 @@ def main():
         # PLY
         mesh_path = args.output_dir / naming.mesh_filename(index)
         usd_path = args.output_dir / naming.usd_filename(index)
-        vs, cs, fs = lmu.plant_gl_scene_to_vertices_and_faces(scene)
-        #lmu.write(str(mesh_path), vs, cs, fs)
-        create_mesh_usd(str(usd_path), vs, cs, fs)
-        # Metadata
         metadata_path = args.output_dir / naming.metadata_filename(index)
-        lsb.export_metadata(ply_filepath=str(mesh_path), metadata_path=str(metadata_path))
+
+        vs, cs, ts, fs = lmu.plant_gl_scene_to_vertices_and_faces(scene)
+        meta_data = lsb.get_metadata(vs, cs)
+
+        create_mesh_usd(f"./models/{naming.usd_filename(index)}", vs, cs, ts, fs, meta_data)
+        lmu.write(str(mesh_path), vs, cs, fs)
+        lsb.export_metadata(vs, cs, metadata_path=str(metadata_path))
+
+        # Metadata
 
         logger.info(f"Wrote mesh to {mesh_path} and metadata to {metadata_path}")
         del scene

@@ -15,19 +15,22 @@ class TreeNamingConfig:
         return
 
     def _prefix(self, index: int) -> str:
-        if index > self.MAX_TREES:
-            logging.error(f"Tree index {index} exceeds maximum supported value {self.MAX_TREES}.")
-            raise ValueError(f"Tree index {index} exceeds maximum supported value {self.MAX_TREES}.")
+        if index > TreeNamingConfig.MAX_TREES:
+            logging.error(f"Tree index {index} exceeds maximum supported value {TreeNamingConfig.MAX_TREES}.")
+            raise ValueError(f"Tree index {index} exceeds maximum supported value {TreeNamingConfig.MAX_TREES}.")
         return f"{self.namespace}_{self.tree_type}_{index:05d}"
 
     def mesh_filename(self, index: int) -> str:
         return f"{self._prefix(index)}.ply"
 
     def usd_filename(self, index: int) -> str:
-        return f"{self._prefix(index)}.usd"
+        return f"{self._prefix(index)}.usda"
 
     def color_map_filename(self, index: int) -> str:
         return f"{self._prefix(index)}_metadata.json"
 
     def hierarchy_filename(self, index: int) -> str:
         return f"{self._prefix(index)}_hierarchy.json"
+
+    def metadata_filename(self, index: int) -> str:
+        return f"{self._prefix(index)}_metadata.json"
