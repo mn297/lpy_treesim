@@ -8,6 +8,7 @@ import secrets
 import logging
 import lpy_treesim.utils.logging_conf
 from lpy_treesim.tree_generation.tree_builder import TreeNamingConfig, TreeBuilder
+import lpy_mesh_utils as lmu
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate and save multiple L-Py trees.")
     parser.add_argument("--num-trees", type=int, default=1, help="Number of trees to generate")
     parser.add_argument("--output-dir", type=Path, default=Path("dataset/"), help="Directory for outputs")
-    parser.add_argument("--tree-name", type=str, default="UFO", help="Tree family to generate (UFO/Envy/etc.)")
+    parser.add_argument("--tree-name", type=str, default="ufo", help="Tree family to generate (UFO/Envy/etc.)")
     parser.add_argument("--verbose", action="store_true", help="Print progress details")
     parser.add_argument(
         "--dataset-seed", type=int, default=None, help="Optional deterministic seed for dataset generation"

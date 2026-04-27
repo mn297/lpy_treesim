@@ -58,6 +58,18 @@ NOTE: You can copy and paste content in noVNC using the clipboard menu in the le
 
 See the repository Dockerfile for more details about the installed packages and build steps.
 
+Installing (Windows and Linux only)
+-----------------------
+Follow the instructructions to install openalea-meta. Note that you need miniforge (which has mamba)
+-  "https://github.com/openalea/openalea-meta"
+
+Activate the openalea environmnet
+- conda activate openalea
+
+cd into the lpy_treesim directory and pip install 
+- pip install .
+now you shuld be able to run code as below
+
 Making your first tree
 ----------------------
 To create your first tree using TreeSim_Lpy, in the NoVNC window with the terminal with L-Py activated, run the following commands:
