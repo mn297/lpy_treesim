@@ -1,4 +1,4 @@
-from pxr import Usd, UsdGeom, Vt, Gf, UsdSemantics, Sdf, UsdShade
+from pxr import Usd, UsdGeom, Vt, Gf, UsdSemantics, Sdf, UsdShade, Ar
 import ctypes
 
 
@@ -41,65 +41,79 @@ def create_mesh(stage, path, points, face_vertex_counts, face_vertex_indices):
     mesh.CreateSubdivisionSchemeAttr(UsdGeom.Tokens.none)
     return mesh
 
-def check_texture():
+def check_texture(stage_context):
+    with Ar.ResolverContextBinder(stage_context):
+        # 1. Create a new USD stage
+        # Set the up axis and units
+        stage = Usd.Stage.CreateInMemory()
+        #stage = Usd.Stage.CreateNew("test_texture.usda")
+        UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
+        UsdGeom.SetStageMetersPerUnit(stage, 1.0)
+
+        # 2. Define the Mesh primitive
+        mesh = UsdGeom.Mesh.Define(stage, '/tree_texture_check')
+
+        # 2. Define Texture Coordinates (UVs)
+        # We use 'st' as the name.
+        # 'interpolation' determines how UVs map to the geometry.
+        tex_coords = UsdGeom.PrimvarsAPI(mesh).CreatePrimvar(
+            "st",
+            Sdf.ValueTypeNames.TexCoord2fArray,
+            UsdGeom.Tokens.varying
+        )
+
+        # 2. Create the Material
+        material_path = Sdf.Path("/textures/pine_bark_vmbibe2g_2k")
+        material = UsdShade.Material.Define(stage, material_path)
+
+        # 3. Create the Shader (UsdPreviewSurface)
+        shader = UsdShade.Shader.Define(stage, material_path.AppendChild("PBRShader"))
+        shader.CreateIdAttr("UsdPreviewSurface")
+        shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.4)
+
+        # 4. Create the Texture Sampler (UsdUVTexture)
+        reader = UsdShade.Shader.Define(stage, material_path.AppendChild("TexSampler"))
+        reader.CreateIdAttr("UsdUVTexture")
+        reader.CreateInput("file", Sdf.ValueTypeNames.Asset).Set("/textures/Pine_Bark_vmbibe2g_2K_BaseColor.jpg")
+        # Connect texture output to shader's diffuseColor input
+        shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).ConnectToSource(
+            reader.CreateOutput("rgb", Sdf.ValueTypeNames.Color3f))
+
+        # 5. Create the Primvar Reader (To tell the texture to use 'st')
+        st_reader = UsdShade.Shader.Define(stage, material_path.AppendChild("STReader"))
+        st_reader.CreateIdAttr("UsdPrimvarReader_float2")
+        st_reader.CreateInput("varname", Sdf.ValueTypeNames.String).Set("st")
+        # Connect reader output to texture sampler's st input
+        reader.CreateInput("st", Sdf.ValueTypeNames.Float2).ConnectToSource(
+            st_reader.CreateOutput("result", Sdf.ValueTypeNames.Float2))
+
+        # 6. Bind the Material to the Mesh
+        UsdShade.MaterialBindingAPI(mesh).Bind(material)
+        # 6. Save the stage
+        #print(stage.GetRootLayer().ExportToString())
+        stage.GetRootLayer().Export("tree_texture_check.usda")
+
+
+def create_mesh_usd(stage_context, tree_name, path_tree_name, vertices, colors, textures, faces, meta_data):
     # 1. Create a new USD stage
     # Set the up axis and units
-    stage = Usd.Stage.CreateNew("test_texture.usda")
+    #stage = Usd.Stage.CreateNew("/World")
+    # 3. Create or open your stage using this context
+    with Ar.ResolverContextBinder(stage_context):
+        stage = Usd.Stage.CreateInMemory()
+
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
     UsdGeom.SetStageMetersPerUnit(stage, 1.0)
 
+    # This acts as the "container" for your model
+    root_xform = UsdGeom.Xform.Define(stage, f'/{tree_name}')
+
+    # This fixes the "Cannot reference... has no default prim" error
+    stage.SetDefaultPrim(root_xform.GetPrim())
+    
     # 2. Define the Mesh primitive
-    mesh = UsdGeom.Mesh.Define(stage, '/TreeMesh')
+    mesh = UsdGeom.Mesh.Define(stage, f"/{tree_name}/body")
 
-    # 2. Define Texture Coordinates (UVs)
-    # We use 'st' as the name.
-    # 'interpolation' determines how UVs map to the geometry.
-    tex_coords = UsdGeom.PrimvarsAPI(mesh).CreatePrimvar(
-        "st",
-        Sdf.ValueTypeNames.TexCoord2fArray,
-        UsdGeom.Tokens.varying
-    )
-
-    # 2. Create the Material
-    material_path = Sdf.Path("/textures/pine_bark_vmbibe2g_2k")
-    material = UsdShade.Material.Define(stage, material_path)
-
-    # 3. Create the Shader (UsdPreviewSurface)
-    shader = UsdShade.Shader.Define(stage, material_path.AppendChild("PBRShader"))
-    shader.CreateIdAttr("UsdPreviewSurface")
-    shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.4)
-
-    # 4. Create the Texture Sampler (UsdUVTexture)
-    reader = UsdShade.Shader.Define(stage, material_path.AppendChild("TexSampler"))
-    reader.CreateIdAttr("UsdUVTexture")
-    reader.CreateInput("file", Sdf.ValueTypeNames.Asset).Set("textures/Pine_Bark_vmbibe2g_2K_BaseColor.jpg")
-    # Connect texture output to shader's diffuseColor input
-    shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).ConnectToSource(
-        reader.CreateOutput("rgb", Sdf.ValueTypeNames.Color3f))
-
-    # 5. Create the Primvar Reader (To tell the texture to use 'st')
-    st_reader = UsdShade.Shader.Define(stage, material_path.AppendChild("STReader"))
-    st_reader.CreateIdAttr("UsdPrimvarReader_float2")
-    st_reader.CreateInput("varname", Sdf.ValueTypeNames.String).Set("st")
-    # Connect reader output to texture sampler's st input
-    reader.CreateInput("st", Sdf.ValueTypeNames.Float2).ConnectToSource(
-        st_reader.CreateOutput("result", Sdf.ValueTypeNames.Float2))
-
-    # 6. Bind the Material to the Mesh
-    UsdShade.MaterialBindingAPI(mesh).Bind(material)
-    # 6. Save the stage
-    stage.GetRootLayer().Save()
-
-
-def create_mesh_usd(file_path, vertices, colors, textures, faces, meta_data):
-    # 1. Create a new USD stage
-    # Set the up axis and units
-    stage = Usd.Stage.CreateNew(file_path)
-    UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
-    UsdGeom.SetStageMetersPerUnit(stage, 1.0)
-
-    # 2. Define the Mesh primitive
-    mesh = UsdGeom.Mesh.Define(stage, '/TreeMesh')
 
     # 3. Set the vertex positions (points)
     vs = [(pt[0], pt[2], pt[1]) for pt in vertices]
@@ -145,7 +159,7 @@ def create_mesh_usd(file_path, vertices, colors, textures, faces, meta_data):
     # 4. Create the Texture Sampler (UsdUVTexture)
     reader = UsdShade.Shader.Define(stage, material_path.AppendChild("TexSampler"))
     reader.CreateIdAttr("UsdUVTexture")
-    reader.CreateInput("file", Sdf.ValueTypeNames.Asset).Set("textures/Pine_Bark_vmbibe2g_2K_BaseColor.jpg")
+    reader.CreateInput("file", Sdf.ValueTypeNames.Asset).Set("../textures/Pine_Bark_vmbibe2g_2K_BaseColor.jpg")
     # Connect texture output to shader's diffuseColor input
     shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).ConnectToSource(
         reader.CreateOutput("rgb", Sdf.ValueTypeNames.Color3f))
@@ -177,7 +191,8 @@ def create_mesh_usd(file_path, vertices, colors, textures, faces, meta_data):
     mesh.CreateSubdivisionSchemeAttr(UsdGeom.Tokens.none)
 
     # 6. Save the stage
-    stage.GetRootLayer().Save()
+    print(f"Saving file to {str(path_tree_name)}")
+    stage.GetRootLayer().Export(str(path_tree_name))
 
 # Example Data
 # verts = [(0,0,0), (1,0,0), (1,1,0), (0,1,0)] # 4 vertices

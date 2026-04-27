@@ -6,6 +6,7 @@ import secrets
 import os as os
 
 
+
 import logging
 import lpy_treesim.utils.logging_conf
 from lpy_treesim.tree_generation.tree_builder import TreeBuilder
@@ -18,8 +19,9 @@ logger = logging.getLogger(__name__)
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate and save multiple L-Py trees.")
     parser.add_argument("--num-trees", type=int, default=1, help="Number of trees to generate")
-    parser.add_argument("--output-dir", type=Path, default=Path("dataset/"), help="Directory for outputs")
-    parser.add_argument("--tree-name", type=str, default="ufo", help="Tree family to generate (UFO/Envy/etc.)")
+    parser.add_argument("--stage-dir", type=Path, default=Path("/home/cindy/isaacsim/World"), help="Directory for top of Stage USD files")
+    parser.add_argument("--output-dir", type=Path, default=Path("dataset/"), help="Directory for regular mesh outputs")
+    parser.add_argument("--tree-name", type=str, default="envy", help="Tree family to generate (UFO/Envy/etc.)")
     parser.add_argument("--verbose", action="store_true", help="Print progress details")
     parser.add_argument(
         "--dataset-seed", type=int, default=None, help="Optional deterministic seed for dataset generation"
@@ -43,8 +45,20 @@ def main():
     naming = TreeNamingConfig(namespace=args.namespace, tree_type=args.tree_name)
     # ensure_output_dir(args.output_dir)
 
-    os.chdir("/Users/grimmc/PycharmProjects/shared_with_OSU")
-    check_texture()
+    stage_context = []
+    if args.stage_dir is not None:
+        from pxr import Ar, Usd
+        # 1. Define your search paths
+        loc_name = str(args.stage_dir)
+        os.chdir(loc_name)
+        print("Changing to {loc_name}")
+        search_paths = [str(args.stage_dir)]
+        search_paths = [loc_name]
+
+        # 2. Create a context with these paths
+        stage_context = Ar.DefaultResolverContext(search_paths)
+
+        check_texture(stage_context)
 
     # Generate trees
     tree_rng: np.random.Generator = np.random.default_rng(seed=args.dataset_seed)
@@ -65,13 +79,17 @@ def main():
         lstring, scene = lsb.generate_tree()
         # PLY
         mesh_path = args.output_dir / naming.mesh_filename(index)
-        usd_path = args.output_dir / naming.usd_filename(index)
         metadata_path = args.output_dir / naming.metadata_filename(index)
+        usd_path = args.stage_dir / naming.usd_filename(index)
 
         vs, cs, ts, fs = lmu.plant_gl_scene_to_vertices_and_faces(scene)
         meta_data = lsb.get_metadata(vs, cs)
 
-        create_mesh_usd(f"./models/{naming.usd_filename(index)}", vs, cs, ts, fs, meta_data)
+        if stage_context is not []:
+            # Where the usd files are stored
+            create_mesh_usd(stage_context, naming._prefix(index), usd_path, vs, cs, ts, fs, meta_data)
+
+        # Write the metadata/mesh to the output directory
         lmu.write(str(mesh_path), vs, cs, fs)
         lsb.export_metadata(vs, cs, metadata_path=str(metadata_path))
 

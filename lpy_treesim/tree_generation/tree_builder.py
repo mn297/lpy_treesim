@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
-import argparse
 from dataclasses import dataclass
-import os
 import sys
 from pathlib import Path
-import random
 from lpy_treesim import ColorManager
 import json
 from openalea.lpy import Lsystem
 import lpy_treesim.tree_generation.lpy_mesh_utils as lmu
 from lpy_treesim.tree_generation.mesh_to_cylinders import add_cylinder_params_to_json, get_cylinder_params
 import numpy as np
-import secrets
+from openalea.plantgl.all import Viewer
+
 
 import logging
 import lpy_treesim.utils.logging_conf
@@ -49,17 +47,22 @@ class TreeBuilder:
             "per_cylinder_label": per_cylinder_label,
             "seed_value": seed_value,
         }
+        # Enable batch mode before displaying anything
+
         self.__lsystem = Lsystem(str(BASE_LPY_PATH), self.extern_vars)
+        
         return
 
     def lsystem(self) -> Lsystem:
         return self.__lsystem
 
     def generate_tree(self):
+
         lstring = self.__lsystem.axiom
         for iteration in range(self.__lsystem.derivationLength):
             lstring = self.__lsystem.derive(lstring, iteration, 1)
             self.__lsystem.plot(lstring)
+            Viewer.hide()
             # input("Press Enter to continue...")
         return lstring, self.__lsystem.sceneInterpretation(lstring)
     

@@ -205,7 +205,7 @@ segmentation.initialize(semanticTypes=["category"])
 """
 
 if __name__ == "__main__":
-    os.chdir("/Users/grimmc/PycharmProjects/shared_with_OSU/")
+    os.chdir("/home/cindy/isaacsim/World/")
     origin = (1, 1)
 
     # Orchard tree parameters
@@ -308,12 +308,12 @@ if __name__ == "__main__":
     #    add_component(f"Hedge_{i:03}", hedge_assets[0], root, translate=(p.x, p.y, 0), rotate=(0, 0, np.random.uniform(0, 360)), scale=(np.random.uniform(0.8, 1.2), np.random.uniform(0.8, 1.2), np.random.uniform(0.8, 1.2)))
     rng_tree = np.random.default_rng()
     for i, p in enumerate(all_trees):
-        tree_id = rng_tree.integers(0, 10, size=1)
+        tree_id = rng_tree.integers(0, 1, size=1)
         tree_str = f"{tree_id[0]:05}"
         other_side = 0.0 if np.random.uniform(0.0, 1.0, 1) else -180.0
         flip_lr = -1.0 if np.random.uniform(0.0, 1.0, 1) else -1.0
         add_component(f"Tree_{i:03}", f"./models/lpy_envy_{tree_str}.usda", root, translate=(p.x, p.y, 0),
-                      rotate=(0, 0, other_side + np.random.uniform(-5, 5)),
+                      rotate=(90, 0, other_side + np.random.uniform(-5, 5)),
                       scale=(flip_lr * np.random.uniform(0.9, 1.1), np.random.uniform(0.9, 1.1), np.random.uniform(0.9, 1.1)))
 
     for i, p in enumerate(all_poles):

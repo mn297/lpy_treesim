@@ -60,12 +60,24 @@ See the repository Dockerfile for more details about the installed packages and 
 
 Installing (Windows and Linux only)
 -----------------------
+First install conda mini-forge; you need this to get the openalea environment (mamba)
+- make sure you have conda-build enabled 
+- conda install conda-build
 Follow the instructions to install openalea-meta. Note that you need miniforge (which has mamba)
 -  "https://github.com/openalea/openalea-meta"
 
-Activate the openalea environmnet
-- conda activate openalea
+Copy the openalea environment
+ - conda create --name lpy_tree --clone openalea
+- conda activate lpy_tree
 
+Add the Universal Scene Description libraries
+- python -m pip install usd-core
+
+shapely, used by generate_orchard
+ - python -m pip install shapely
+
+either pip install or set up conda develop (note, in PyCharm you can just set the current folder to be the top one)
+- conda develop .
 cd into the lpy_treesim directory and pip install 
 - pip install .
 now you should be able to run code as below
