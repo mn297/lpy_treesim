@@ -110,7 +110,20 @@ def create_mesh_usd(stage_context, tree_name, path_tree_name, vertices, colors, 
 
     # This fixes the "Cannot reference... has no default prim" error
     stage.SetDefaultPrim(root_xform.GetPrim())
+        
     
+    trunk_parts = {}
+    branch_parts = {}
+    tertiary_parts = {}
+    
+    for cs, vs in zip(colors, vertices):
+        r, g, b = cs
+        color_key = f"({r}, {g}, {b})"
+
+        look_up = meta_data["cylinder_data"][color_key]["part_name"]
+
+        if mesh_parts
+
     # 2. Define the Mesh primitive
     mesh = UsdGeom.Mesh.Define(stage, f"/{tree_name}/body")
 

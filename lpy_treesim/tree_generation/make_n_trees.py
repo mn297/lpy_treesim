@@ -69,7 +69,8 @@ def main():
             seed_value=tree_seed,
             semantic_label=args.semantic_label,
             instance_label=args.instance_label,
-            per_cylinder_label=args.per_cylinder_label,
+            per_cylinder_label=True
+            #per_cylinder_label=args.per_cylinder_label,
         )
 
         if args.verbose:
