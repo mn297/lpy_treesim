@@ -96,7 +96,23 @@ def compute_cylinder_params(vertices):
     # 3. Length
     # Project points onto the principal axis
     projections = np.dot(centered_points, principal_axis)
+    # if principal_axis[2] < 0:
+    #     principal_axis = -principal_axis
     length = np.max(projections) - np.min(projections)
+
+    # TODO check if this is correct
+    e_vals, e_vecs = np.linalg.eigh(covariance_matrix)
+
+    ranges = []
+    for i in range(3):
+        proj = centered_points @ e_vecs[:, i]
+        ranges.append(proj.max() - proj.min())
+
+    principal_axis = e_vecs[:, int(np.argmax(ranges))]
+    principal_axis = principal_axis / (np.linalg.norm(principal_axis) + 1e-12)
+
+    projections = centered_points @ principal_axis
+    length = projections.max() - projections.min()
 
     # 4. Radius
     # Calculate distance of points from the axis

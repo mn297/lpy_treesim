@@ -122,7 +122,7 @@ def create_mesh_usd(stage_context, tree_name, path_tree_name, vertices, colors, 
 
         look_up = meta_data["cylinder_data"][color_key]["part_name"]
 
-        if mesh_parts
+        # if mesh_parts
 
     # 2. Define the Mesh primitive
     mesh = UsdGeom.Mesh.Define(stage, f"/{tree_name}/body")

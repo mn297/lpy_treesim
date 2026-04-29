@@ -29,7 +29,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--namespace", type=str, default="lpy", help="Prefix namespace for output filenames")
     parser.add_argument("--semantic-label", action="store_true", help="Enable semantic labeling")
     parser.add_argument("--instance-label", action="store_true", help="Enable instance labeling")
-    parser.add_argument("--per-cylinder-label", action="store_true", help="Enable per-cylinder labeling")
+    parser.add_argument("--per-cylinder-label", action="store_true", help="Enable per-cylinder labeling", default=True)
     args = parser.parse_args()
     if args.num_trees > (TreeNamingConfig.MAX_TREES + 1) or args.num_trees < 1:
         raise ValueError(f"num_trees={args.num_trees} is not in the range [1, {TreeNamingConfig.MAX_TREES + 1}].")
